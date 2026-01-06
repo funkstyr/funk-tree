@@ -1,5 +1,5 @@
 {
-  "name": "@funk-tree-new/auth",
+  "name": "@funk-tree/auth",
   "type": "module",
   "exports": {
     ".": {
@@ -11,14 +11,14 @@
   },
   "scripts": {},
   "dependencies": {
-    "@funk-tree-new/db": "workspace:*",
-    "@funk-tree-new/env": "workspace:*",
+    "@funk-tree/db": "workspace:*",
+    "@funk-tree/env": "workspace:*",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@funk-tree-new/config": "workspace:*",
+    "@funk-tree/config": "workspace:*",
     "typescript": "catalog:"
   }
 }

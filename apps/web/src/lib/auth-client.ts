@@ -1,4 +1,4 @@
-import { env } from "@funk-tree-new/env/web";
+import { env } from "@funk-tree/env/web";
 import { createAuthClient } from "better-auth/react";
 
 export const authClient = createAuthClient({

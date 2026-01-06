@@ -1,5 +1,5 @@
 {
-  "name": "@funk-tree-new/api",
+  "name": "@funk-tree/api",
   "type": "module",
   "exports": {
     ".": {
@@ -11,9 +11,9 @@
   },
   "scripts": {},
   "dependencies": {
-    "@funk-tree-new/auth": "workspace:*",
-    "@funk-tree-new/db": "workspace:*",
-    "@funk-tree-new/env": "workspace:*",
+    "@funk-tree/auth": "workspace:*",
+    "@funk-tree/db": "workspace:*",
+    "@funk-tree/env": "workspace:*",
     "@orpc/client": "catalog:",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
@@ -22,7 +22,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@funk-tree-new/config": "workspace:*",
+    "@funk-tree/config": "workspace:*",
     "typescript": "catalog:"
   }
 }

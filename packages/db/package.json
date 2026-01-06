@@ -1,5 +1,5 @@
 {
-  "name": "@funk-tree-new/db",
+  "name": "@funk-tree/db",
   "type": "module",
   "exports": {
     ".": {
@@ -20,14 +20,15 @@
     "db:down": "docker compose down"
   },
   "dependencies": {
-    "@funk-tree-new/env": "workspace:*",
+    "@funk-tree/env": "workspace:*",
+    "@electric-sql/pglite": "^0.2.17",
     "dotenv": "catalog:",
     "drizzle-orm": "^0.45.1",
     "pg": "^8.16.3",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@funk-tree-new/config": "workspace:*",
+    "@funk-tree/config": "workspace:*",
     "@types/pg": "^8.15.6",
     "drizzle-kit": "^0.31.8",
     "typescript": "catalog:"

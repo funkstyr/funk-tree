@@ -1,7 +1,7 @@
-import { createContext } from "@funk-tree-new/api/context";
-import { appRouter } from "@funk-tree-new/api/routers/index";
-import { auth } from "@funk-tree-new/auth";
-import { env } from "@funk-tree-new/env/server";
+import { createContext } from "@funk-tree/api/context";
+import { appRouter } from "@funk-tree/api/routers/index";
+import { auth } from "@funk-tree/auth";
+import { env } from "@funk-tree/env/server";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { onError } from "@orpc/server";

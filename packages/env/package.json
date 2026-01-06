@@ -1,5 +1,5 @@
 {
-  "name": "@funk-tree-new/env",
+  "name": "@funk-tree/env",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -13,7 +13,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@funk-tree-new/config": "workspace:*",
+    "@funk-tree/config": "workspace:*",
     "@types/bun": "catalog:",
     "typescript": "catalog:"
   }

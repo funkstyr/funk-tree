@@ -1,4 +1,4 @@
-import { env } from "@funk-tree-new/env/server";
+import { env } from "@funk-tree/env/server";
 import { drizzle } from "drizzle-orm/node-postgres";
 
 import * as schema from "./schema";

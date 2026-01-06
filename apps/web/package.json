@@ -9,9 +9,9 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",
-    "@funk-tree-new/api": "workspace:*",
-    "@funk-tree-new/auth": "workspace:*",
-    "@funk-tree-new/env": "workspace:*",
+    "@funk-tree/api": "workspace:*",
+    "@funk-tree/auth": "workspace:*",
+    "@funk-tree/env": "workspace:*",
     "@orpc/client": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/tanstack-query": "^1.12.2",
@@ -39,7 +39,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@funk-tree-new/config": "workspace:*",
+    "@funk-tree/config": "workspace:*",
     "@tanstack/react-query-devtools": "^5.91.1",
     "@tanstack/react-router-devtools": "^1.141.1",
     "@testing-library/dom": "^10.4.0",

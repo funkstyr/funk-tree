@@ -1,6 +1,6 @@
 import type { Context as HonoContext } from "hono";
 
-import { auth } from "@funk-tree-new/auth";
+import { auth } from "@funk-tree/auth";
 
 export type CreateContextOptions = {
   context: HonoContext;

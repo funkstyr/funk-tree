@@ -1,7 +1,7 @@
-import type { AppRouter } from "@funk-tree-new/api/routers/index";
+import type { AppRouter } from "@funk-tree/api/routers/index";
 import type { RouterClient } from "@orpc/server";
 
-import { env } from "@funk-tree-new/env/web";
+import { env } from "@funk-tree/env/web";
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";

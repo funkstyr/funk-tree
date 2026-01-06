@@ -1,6 +1,6 @@
-import { db } from "@funk-tree-new/db";
-import * as schema from "@funk-tree-new/db/schema/auth";
-import { env } from "@funk-tree-new/env/server";
+import { db } from "@funk-tree/db";
+import * as schema from "@funk-tree/db/schema/auth";
+import { env } from "@funk-tree/env/server";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
