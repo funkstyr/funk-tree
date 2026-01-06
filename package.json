@@ -34,6 +34,9 @@
     "db:watch": "turbo -F @funk-tree/db db:watch",
     "db:stop": "turbo -F @funk-tree/db db:stop",
     "db:down": "turbo -F @funk-tree/db db:down",
+    "crawl": "turbo -F @funk-tree/crawler crawl",
+    "crawl:migrate": "turbo -F @funk-tree/crawler migrate",
+    "crawl:status": "turbo -F @funk-tree/crawler status",
     "check": "oxlint && oxfmt --write"
   },
   "dependencies": {

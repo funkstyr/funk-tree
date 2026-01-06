@@ -5,6 +5,12 @@
     ".": {
       "default": "./src/index.ts"
     },
+    "./pglite": {
+      "default": "./src/pglite.ts"
+    },
+    "./schema": {
+      "default": "./src/schema/index.ts"
+    },
     "./*": {
       "default": "./src/*.ts"
     }

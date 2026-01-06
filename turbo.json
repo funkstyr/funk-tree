@@ -43,6 +43,16 @@
     },
     "db:down": {
       "cache": false
+    },
+    "crawl": {
+      "cache": false,
+      "persistent": true
+    },
+    "migrate": {
+      "cache": false
+    },
+    "status": {
+      "cache": false
     }
   }
 }
