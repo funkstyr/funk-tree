@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funk Family Tree - Interactive Visualization</title>
+    <link rel="stylesheet" href="css/tree.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header id="header">
+            <h1>Funk Family Tree</h1>
+            <p class="subtitle">Descendants of Bishop Heinrich Funck (c. 1702 - 1760) - Data from WikiTree</p>
+        </header>
+
+        <!-- Controls -->
+        <div id="controls">
+            <div class="control-group">
+                <label for="search">Search:</label>
+                <input type="text" id="search" placeholder="Enter name...">
+                <button id="search-btn">Find</button>
+                <button id="clear-btn">Clear</button>
+            </div>
+            <div class="control-group">
+                <label for="generation-filter">Generation:</label>
+                <select id="generation-filter">
+                    <option value="all">All Generations</option>
+                    <option value="3">Up to Gen 3</option>
+                    <option value="4" selected>Up to Gen 4</option>
+                    <option value="5">Up to Gen 5</option>
+                    <option value="6">Up to Gen 6</option>
+                    <option value="7">Up to Gen 7</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <button id="expand-all">Expand All</button>
+                <button id="collapse-all">Collapse All</button>
+                <button id="reset-zoom">Reset View</button>
+            </div>
+            <div class="control-group stats">
+                <span id="node-count">Nodes: 0</span>
+                <span id="visible-count">Visible: 0</span>
+            </div>
+        </div>
+
+        <!-- Tree Container -->
+        <div id="tree-container">
+            <svg id="tree-svg"></svg>
+        </div>
+
+        <!-- Person Detail Panel -->
+        <div id="detail-panel" class="hidden">
+            <button id="close-panel">&times;</button>
+            <h2 id="detail-name">Person Name</h2>
+            <div id="detail-content">
+                <div class="detail-row">
+                    <span class="label">Birth:</span>
+                    <span id="detail-birth" class="value">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Death:</span>
+                    <span id="detail-death" class="value">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Generation:</span>
+                    <span id="detail-generation" class="value">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Location:</span>
+                    <span id="detail-location" class="value">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Occupation:</span>
+                    <span id="detail-occupation" class="value">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Religion:</span>
+                    <span id="detail-religion" class="value">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Children:</span>
+                    <span id="detail-children" class="value">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tooltip -->
+        <div id="tooltip" class="hidden"></div>
+
+        <!-- Legend -->
+        <div id="legend">
+            <h3>Legend</h3>
+            <div class="legend-item">
+                <span class="legend-color patriarch"></span>
+                <span>Patriarch</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color male"></span>
+                <span>Male</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color female"></span>
+                <span>Female</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color unknown"></span>
+                <span>Unknown</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-icon">+</span>
+                <span>Has hidden children</span>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loading">
+            <div class="spinner"></div>
+            <p>Loading family tree data...</p>
+        </div>
+    </div>
+
+    <script src="js/family_tree.js"></script>
+</body>
+</html>

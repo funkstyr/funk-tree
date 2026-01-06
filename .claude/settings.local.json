@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c:*)",
+      "WebFetch(domain:www.usfunks.net)",
+      "WebFetch(domain:www.wikitree.com)",
+      "WebFetch(domain:homepages.rootsweb.com)",
+      "WebFetch(domain:ancestors.familysearch.org)",
+      "WebFetch(domain:www.familysearch.org)",
+      "WebSearch",
+      "WebFetch(domain:www.geni.com)"
+    ]
+  }
+}
