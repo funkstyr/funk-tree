@@ -224,166 +224,329 @@ funk-tree/
 - Learning curve if unfamiliar with monorepo tooling
 - Bun ecosystem still maturing
 
-### Monorepo Structure
+---
+
+### Starting Point: Better-T-Stack Template
+
+Instead of manually scaffolding the monorepo, use the **better-t-stack** CLI to generate a fully-configured, end-to-end type-safe project:
+
+```bash
+bun create better-t-stack@latest funk-tree \
+  --frontend tanstack-start \
+  --backend hono \
+  --runtime bun \
+  --api orpc \
+  --auth better-auth \
+  --payments none \
+  --database postgres \
+  --orm drizzle \
+  --db-setup docker \
+  --package-manager bun \
+  --git \
+  --web-deploy none \
+  --server-deploy none \
+  --install \
+  --addons fumadocs oxlint turborepo \
+  --examples ai todo
+```
+
+### What This Stack Provides
+
+| Component | Technology | Purpose |
+|-----------|------------|---------|
+| **Frontend** | TanStack Start | Full-stack React framework with SSR, streaming, server functions |
+| **Backend** | Hono | Lightweight, fast web framework for API routes |
+| **Runtime** | Bun | Fast JavaScript runtime and package manager |
+| **API Layer** | oRPC | Type-safe RPC with OpenAPI compliance |
+| **Auth** | Better Auth | Framework-agnostic auth (social login, 2FA, organizations) |
+| **Database** | PostgreSQL + Drizzle | Type-safe ORM with migrations |
+| **Docs** | Fumadocs | Beautiful documentation site (for the project) |
+| **Linting** | oxlint | Fast Rust-based linter |
+| **Monorepo** | Turborepo | Build orchestration and caching |
+
+### Stack Component Details
+
+**TanStack Start** - Full-stack React framework:
+- Server-side rendering + streaming
+- Type-safe server functions (RPC)
+- File-based routing via TanStack Router
+- Powered by Vite for fast dev experience
+
+**oRPC** - Type-safe API layer:
+- End-to-end type safety (inputs, outputs, errors)
+- First-class OpenAPI support
+- Works with Zod/Valibot for validation
+- Native support for Date, File, Blob, BigInt, streaming
+
+**Better Auth** - Authentication:
+- Email/password + social providers (GitHub, Google, etc.)
+- Built-in rate limiting
+- Two-factor authentication
+- Multi-tenancy and organizations
+- Works with any database
+
+**Fumadocs** - Documentation:
+- MDX-based documentation
+- Syntax highlighting (Shiki)
+- Search integration (Orama, Algolia)
+- Great for documenting the genealogy API
+
+---
+
+### Generated Monorepo Structure
 
 ```
 funk-tree/
 ├── apps/
-│   ├── crawler/              # WikiTree crawler CLI
+│   ├── web/                      # TanStack Start frontend
+│   │   ├── app/
+│   │   │   ├── routes/           # File-based routing
+│   │   │   │   ├── __root.tsx
+│   │   │   │   ├── index.tsx
+│   │   │   │   └── api/          # API routes
+│   │   │   ├── components/
+│   │   │   │   ├── FamilyTree.tsx      # Add: Tree visualization
+│   │   │   │   └── MigrationMap.tsx    # Add: Map visualization
+│   │   │   └── lib/
+│   │   │       └── db.ts         # PGLite browser client
+│   │   ├── package.json
+│   │   └── vite.config.ts
+│   │
+│   ├── server/                   # Hono backend
 │   │   ├── src/
 │   │   │   ├── index.ts
-│   │   │   ├── wikitree-api.ts
-│   │   │   └── db.ts
-│   │   ├── package.json
-│   │   └── tsconfig.json
+│   │   │   ├── router/           # oRPC routes
+│   │   │   │   ├── index.ts
+│   │   │   │   └── person.ts     # Add: Person CRUD
+│   │   │   └── lib/
+│   │   │       └── db.ts         # Drizzle client
+│   │   └── package.json
 │   │
-│   └── web/                  # Visualization web app
+│   ├── docs/                     # Fumadocs site (addon)
+│   │   ├── content/
+│   │   │   └── docs/
+│   │   └── package.json
+│   │
+│   └── crawler/                  # Add: WikiTree crawler CLI
 │       ├── src/
-│       │   ├── App.tsx
-│       │   ├── components/
-│       │   │   ├── FamilyTree.tsx
-│       │   │   └── MigrationMap.tsx
-│       │   └── lib/
-│       │       └── db.ts     # sql.js-httpvfs client
-│       ├── package.json
-│       └── vite.config.ts
+│       │   ├── index.ts
+│       │   ├── wikitree-api.ts
+│       │   └── crawl.ts
+│       └── package.json
 │
 ├── packages/
-│   ├── types/                # Shared TypeScript types
+│   ├── db/                       # Drizzle schema (shared)
 │   │   ├── src/
-│   │   │   ├── person.ts
-│   │   │   ├── relationship.ts
-│   │   │   └── index.ts
+│   │   │   ├── schema.ts         # Person, Relationship, Queue tables
+│   │   │   ├── index.ts
+│   │   │   └── migrations/
+│   │   ├── drizzle.config.ts
 │   │   └── package.json
 │   │
-│   ├── db/                   # Shared database utilities
+│   ├── auth/                     # Better Auth config
 │   │   ├── src/
-│   │   │   ├── schema.ts
-│   │   │   ├── migrations.ts
-│   │   │   └── queries.ts
+│   │   │   ├── auth.ts
+│   │   │   └── client.ts
 │   │   └── package.json
 │   │
-│   └── config/               # Shared configs
-│       ├── tsconfig.base.json
-│       └── eslint.config.js
+│   └── shared/                   # Shared types and utilities
+│       ├── src/
+│       │   ├── types.ts          # Person, Relationship types
+│       │   └── utils.ts
+│       └── package.json
 │
-├── data/                     # Database files
-│   └── funk_tree.db
+├── data/                         # Add: Local data directory
+│   └── funk_tree/                # PGLite data directory
 │
-├── package.json              # Root workspace
-├── turbo.json                # Turborepo config
-├── bun.lockb
-└── bunfig.toml
+├── docker-compose.yml            # PostgreSQL for development
+├── package.json
+├── turbo.json
+└── bun.lockb
 ```
 
-### Setup Steps
+---
+
+### Post-Scaffold Setup Steps
+
+After running the better-t-stack command:
 
 ```bash
-# 1. Create monorepo
-bunx create-turbo@latest funk-tree
 cd funk-tree
 
-# 2. Configure Bun workspaces (package.json)
-{
-  "name": "funk-tree",
-  "private": true,
-  "workspaces": ["apps/*", "packages/*"]
-}
-
-# 3. Create shared types package
-mkdir -p packages/types/src
-cd packages/types
-bun init
-
-# 4. Create crawler app
+# 1. Add the crawler app
 mkdir -p apps/crawler/src
-cd apps/crawler
-bun init
-bun add better-sqlite3 @types/better-sqlite3
+cat > apps/crawler/package.json << 'EOF'
+{
+  "name": "@funk-tree/crawler",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "crawl": "bun run src/index.ts"
+  },
+  "dependencies": {
+    "@funk-tree/db": "workspace:*",
+    "@electric-sql/pglite": "latest"
+  }
+}
+EOF
 
-# 5. Create web app
-cd apps/web
-bun create vite . --template react-ts
-bun add sql.js-httpvfs
+# 2. Update packages/db/src/schema.ts with genealogy tables
+# (See Drizzle schema in "Database Options" section below)
 
-# 6. Install all dependencies
-cd ../..
-bun install
+# 3. Add PGLite for local file-based development
+bun add -D @electric-sql/pglite --filter @funk-tree/crawler
+bun add -D @electric-sql/pglite --filter @funk-tree/web
 
-# 7. Run development
+# 4. Start the dev environment
+bun run dev
+```
+
+---
+
+### Development vs Production Database
+
+| Environment | Database | Notes |
+|-------------|----------|-------|
+| **Development** | PGLite (file-based) | No Docker needed, instant setup |
+| **Production** | PostgreSQL (Docker/cloud) | Full Postgres features |
+| **Browser** | PGLite (IndexedDB) | Client-side persistence |
+
+The beauty of Drizzle + PostgreSQL dialect: same schema works with both PGLite and full PostgreSQL.
+
+```typescript
+// packages/db/src/client.ts
+import { drizzle } from 'drizzle-orm/pglite';
+import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres';
+import { PGlite } from '@electric-sql/pglite';
+import * as schema from './schema';
+
+export function createDb(mode: 'local' | 'docker') {
+  if (mode === 'local') {
+    // File-based PGLite for development
+    const client = new PGlite('./data/funk_tree');
+    return drizzle(client, { schema });
+  } else {
+    // Docker PostgreSQL for production-like environment
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    return drizzlePg(pool, { schema });
+  }
+}
+```
+
+---
+
+### oRPC API Routes for Genealogy
+
+**apps/server/src/router/person.ts:**
+```typescript
+import { z } from 'zod';
+import { router, publicProcedure } from '../trpc';
+import { db } from '../lib/db';
+import { persons, relationships } from '@funk-tree/db/schema';
+import { eq, like, and } from 'drizzle-orm';
+
+export const personRouter = router({
+  // Get person by WikiTree ID
+  getByWikiId: publicProcedure
+    .input(z.object({ wikiId: z.string() }))
+    .query(async ({ input }) => {
+      return db.query.persons.findFirst({
+        where: eq(persons.wikiId, input.wikiId),
+      });
+    }),
+
+  // Search persons by name
+  search: publicProcedure
+    .input(z.object({
+      query: z.string(),
+      limit: z.number().default(50)
+    }))
+    .query(async ({ input }) => {
+      return db.query.persons.findMany({
+        where: like(persons.name, `%${input.query}%`),
+        limit: input.limit,
+      });
+    }),
+
+  // Get ancestors
+  getAncestors: publicProcedure
+    .input(z.object({ personId: z.number(), depth: z.number().default(5) }))
+    .query(async ({ input }) => {
+      // Recursive CTE for ancestor tree
+      // Implementation depends on your traversal needs
+    }),
+
+  // Get all persons with birth locations (for map)
+  getForMap: publicProcedure
+    .input(z.object({
+      startYear: z.number().optional(),
+      endYear: z.number().optional(),
+    }))
+    .query(async ({ input }) => {
+      return db.query.persons.findMany({
+        where: and(
+          // Filter by birth year range if provided
+        ),
+        columns: {
+          id: true,
+          name: true,
+          birthDate: true,
+          birthLocation: true,
+        },
+      });
+    }),
+});
+```
+
+---
+
+### Turborepo Task Configuration
+
+**turbo.json** (enhanced for crawler):
+```json
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".output/**"]
+    },
+    "crawl": {
+      "cache": false,
+      "dependsOn": ["@funk-tree/db#build"]
+    },
+    "db:migrate": {
+      "cache": false
+    },
+    "db:studio": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "outputs": []
+    }
+  }
+}
+```
+
+Run commands:
+```bash
+# Start all dev servers
 turbo dev
-```
 
-### Key TypeScript Files
+# Run crawler
+turbo crawl
 
-**packages/types/src/person.ts**
-```typescript
-export interface Person {
-  id: number;
-  wikiId: string;
-  name: string;
-  firstName?: string;
-  middleName?: string;
-  lastNameBirth?: string;
-  lastNameCurrent?: string;
-  suffix?: string;
-  gender?: 'Male' | 'Female' | 'Unknown';
-  birthDate?: string;
-  deathDate?: string;
-  birthLocation?: string;
-  deathLocation?: string;
-  isLiving?: boolean;
-  generation?: number;
-}
+# Open Drizzle Studio
+turbo db:studio
 
-export interface Relationship {
-  id: number;
-  personId: number;
-  relatedPersonId: number;
-  type: 'parent' | 'child' | 'spouse';
-}
-
-export interface QueueItem {
-  id: number;
-  wikiId: string;
-  status: 'pending' | 'processing' | 'completed' | 'error';
-  priority: number;
-  createdAt: Date;
-}
-```
-
-**apps/crawler/src/db.ts**
-```typescript
-import Database from 'better-sqlite3';
-import type { Person, QueueItem } from '@funk-tree/types';
-
-export class CrawlerDB {
-  private db: Database.Database;
-
-  constructor(dbPath: string) {
-    this.db = new Database(dbPath);
-    this.db.pragma('journal_mode = WAL');
-    this.initSchema();
-  }
-
-  savePerson(person: Person): void {
-    const stmt = this.db.prepare(`
-      INSERT OR REPLACE INTO persons
-      (wiki_id, name, first_name, birth_date, birth_location, ...)
-      VALUES (?, ?, ?, ?, ?, ...)
-    `);
-    stmt.run(person.wikiId, person.name, ...);
-  }
-
-  getNextFromQueue(): QueueItem | null {
-    return this.db.prepare(`
-      SELECT * FROM crawl_queue
-      WHERE status = 'pending'
-      ORDER BY priority DESC
-      LIMIT 1
-    `).get() as QueueItem | null;
-  }
-}
+# Build everything
+turbo build
 ```
 
 ### Deployment Options
