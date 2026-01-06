@@ -1,0 +1,24 @@
+{
+  "name": "@funk-tree-new/auth",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@funk-tree-new/db": "workspace:*",
+    "@funk-tree-new/env": "workspace:*",
+    "better-auth": "catalog:",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@funk-tree-new/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}
