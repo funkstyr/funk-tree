@@ -6,6 +6,7 @@
     "dev": "bun run src/index.ts",
     "crawl": "bun run src/index.ts crawl",
     "migrate": "bun run src/migrate.ts",
+    "backfill-keys": "bun run src/backfill-location-keys.ts",
     "status": "bun run src/index.ts status",
     "geocode": "bun run src/index.ts geocode",
     "export": "bun run src/index.ts export",

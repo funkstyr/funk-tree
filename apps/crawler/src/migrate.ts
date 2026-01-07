@@ -4,6 +4,7 @@
 
 import { createPGLiteDb, migratePGLiteDb } from "@funk-tree/db/pglite";
 import { persons, crawlQueue, type NewPerson } from "@funk-tree/db/schema";
+import { normalizeLocationKey } from "@funk-tree/db/utils/location";
 import { WikiTreeCrawler } from "./crawler";
 
 const DATA_DIR = "../../data/pglite";
@@ -75,6 +76,9 @@ async function migrate() {
 
   for (const [wikiId, person] of Object.entries(progressData.persons)) {
     try {
+      const birthLocation = person.birth_location ?? null;
+      const deathLocation = person.death_location ?? null;
+
       const personData: NewPerson = {
         wikiId,
         wikiNumericId: person.id ?? null,
@@ -87,8 +91,10 @@ async function migrate() {
         gender: person.gender ?? null,
         birthDate: person.birth_date ?? null,
         deathDate: person.death_date ?? null,
-        birthLocation: person.birth_location ?? null,
-        deathLocation: person.death_location ?? null,
+        birthLocation,
+        birthLocationKey: normalizeLocationKey(birthLocation),
+        deathLocation,
+        deathLocationKey: normalizeLocationKey(deathLocation),
         isLiving: person.is_living === 1,
         generation: person.generation ?? null,
         fatherWikiId: person.father_id ? String(person.father_id) : null,

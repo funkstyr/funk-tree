@@ -286,7 +286,7 @@ export const getMapData = publicProcedure
   )
   .handler(async ({ input }) => {
     return withDatabaseErrorHandling("getMapData", async () => {
-      // Join persons with locations on birth_location = raw_location
+      // Join persons with locations using normalized keys for reliable matching
       const result = await db
         .select({
           wikiId: persons.wikiId,
@@ -302,7 +302,7 @@ export const getMapData = publicProcedure
           city: locations.city,
         })
         .from(persons)
-        .innerJoin(locations, eq(persons.birthLocation, locations.rawLocation))
+        .innerJoin(locations, eq(persons.birthLocationKey, locations.locationKey))
         .where(and(isNotNull(locations.latitude), isNotNull(locations.longitude)));
 
       // Parse years and filter if needed
@@ -399,11 +399,11 @@ export const getMapData = publicProcedure
 // Get geocoding progress status
 export const getGeocodingStatus = publicProcedure.handler(async () => {
   return withDatabaseErrorHandling("getGeocodingStatus", async () => {
-    // Count unique birth locations in persons
+    // Count unique birth location keys in persons
     const uniqueLocationsResult = await db.execute(sql`
-      SELECT COUNT(DISTINCT birth_location) as count
+      SELECT COUNT(DISTINCT birth_location_key) as count
       FROM persons
-      WHERE birth_location IS NOT NULL AND birth_location != ''
+      WHERE birth_location_key IS NOT NULL
     `);
     const totalLocations = Number(uniqueLocationsResult.rows[0]?.count || 0);
 
@@ -411,11 +411,11 @@ export const getGeocodingStatus = publicProcedure.handler(async () => {
     const geocodedResult = await db.select({ count: sql<number>`count(*)` }).from(locations);
     const geocodedLocations = Number(geocodedResult[0]?.count || 0);
 
-    // Count persons with geocoded birth locations
+    // Count persons with geocoded birth locations (using key-based join)
     const personsWithCoordsResult = await db.execute(sql`
       SELECT COUNT(*) as count
       FROM persons p
-      INNER JOIN locations l ON p.birth_location = l.raw_location
+      INNER JOIN locations l ON p.birth_location_key = l.location_key
       WHERE l.latitude IS NOT NULL
     `);
     const personsWithCoords = Number(personsWithCoordsResult.rows[0]?.count || 0);
@@ -424,7 +424,7 @@ export const getGeocodingStatus = publicProcedure.handler(async () => {
     const totalPersonsResult = await db.execute(sql`
       SELECT COUNT(*) as count
       FROM persons
-      WHERE birth_location IS NOT NULL AND birth_location != ''
+      WHERE birth_location_key IS NOT NULL
     `);
     const totalPersonsWithLocation = Number(totalPersonsResult.rows[0]?.count || 0);
 

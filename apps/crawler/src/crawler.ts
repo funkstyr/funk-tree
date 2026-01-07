@@ -1,6 +1,7 @@
 import { eq, sql, count, desc, asc } from "drizzle-orm";
 import type { PGLiteDatabase } from "@funk-tree/db/pglite";
 import { persons, crawlQueue, type NewPerson } from "@funk-tree/db/schema";
+import { normalizeLocationKey } from "@funk-tree/db/utils/location";
 import { wikitreeApi, type WikiTreeProfile } from "./wikitree-api";
 import { buildFullName, extractIds, isValidId } from "./utils";
 
@@ -20,6 +21,9 @@ export class WikiTreeCrawler {
     if (!wikiId) return;
 
     // Upsert the person
+    const birthLocation = profile.BirthLocation || null;
+    const deathLocation = profile.DeathLocation || null;
+
     const personData: NewPerson = {
       wikiId,
       wikiNumericId: profile.Id,
@@ -32,8 +36,10 @@ export class WikiTreeCrawler {
       gender: profile.Gender || null,
       birthDate: profile.BirthDate || null,
       deathDate: profile.DeathDate || null,
-      birthLocation: profile.BirthLocation || null,
-      deathLocation: profile.DeathLocation || null,
+      birthLocation,
+      birthLocationKey: normalizeLocationKey(birthLocation),
+      deathLocation,
+      deathLocationKey: normalizeLocationKey(deathLocation),
       isLiving: profile.IsLiving === 1,
       fatherWikiId: isValidId(profile.Father) ? String(profile.Father) : null,
       motherWikiId: isValidId(profile.Mother) ? String(profile.Mother) : null,

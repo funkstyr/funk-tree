@@ -26,7 +26,9 @@ export const persons = pgTable(
     birthDate: text("birth_date"), // Keep as text for partial dates like "1750"
     deathDate: text("death_date"),
     birthLocation: text("birth_location"),
+    birthLocationKey: text("birth_location_key"), // Normalized for matching (lowercase, trimmed)
     deathLocation: text("death_location"),
+    deathLocationKey: text("death_location_key"), // Normalized for matching (lowercase, trimmed)
     isLiving: boolean("is_living").default(false),
     generation: integer("generation"),
     fatherWikiId: text("father_wiki_id"),
@@ -37,6 +39,9 @@ export const persons = pgTable(
   (table) => [
     index("idx_persons_wiki_id").on(table.wikiId),
     index("idx_persons_birth_location").on(table.birthLocation),
+    index("idx_persons_birth_location_key").on(table.birthLocationKey),
+    index("idx_persons_death_location").on(table.deathLocation),
+    index("idx_persons_death_location_key").on(table.deathLocationKey),
     index("idx_persons_last_name").on(table.lastNameBirth),
     // Additional indexes for relationship queries
     index("idx_persons_father_wiki_id").on(table.fatherWikiId),
@@ -91,6 +96,7 @@ export const locations = pgTable(
   {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     rawLocation: text("raw_location").unique().notNull(),
+    locationKey: text("location_key").unique(), // Normalized for matching (lowercase, trimmed)
     latitude: real("latitude"),
     longitude: real("longitude"),
     normalizedName: text("normalized_name"),
@@ -101,6 +107,7 @@ export const locations = pgTable(
   },
   (table) => [
     index("idx_locations_raw").on(table.rawLocation),
+    index("idx_locations_key").on(table.locationKey),
     // Index for map queries filtering by coordinates
     index("idx_locations_coords").on(table.latitude, table.longitude),
   ],

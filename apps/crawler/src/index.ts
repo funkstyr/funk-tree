@@ -31,7 +31,16 @@ async function main() {
   switch (command) {
     case "crawl": {
       const startId = process.argv[3] || START_ID;
+      const skipGeocode = process.argv.includes("--no-geocode");
+
       await crawler.crawl(startId);
+
+      // Auto-geocode after crawling (unless --no-geocode flag is passed)
+      if (!skipGeocode) {
+        console.log("\n--- Starting automatic geocoding ---");
+        const { populateLocations } = await import("./geocode");
+        await populateLocations(db);
+      }
       break;
     }
 
@@ -53,9 +62,10 @@ async function main() {
 
     default:
       console.log("Usage:");
-      console.log("  bun run crawl [start_id]  - Start/continue crawling");
+      console.log("  bun run crawl [start_id]  - Start/continue crawling (auto-geocodes after)");
+      console.log("  bun run crawl [id] --no-geocode - Crawl without geocoding");
       console.log("  bun run status            - Show database status");
-      console.log("  bun run geocode           - Geocode birth locations");
+      console.log("  bun run geocode           - Geocode birth locations only");
       console.log("  bun run export [output]   - Export database for browser");
   }
 

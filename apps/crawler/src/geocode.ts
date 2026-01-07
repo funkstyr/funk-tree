@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { sql } from "drizzle-orm";
 import { locations, persons } from "@funk-tree/db/schema";
+import { normalizeLocationKey } from "@funk-tree/db/utils/location";
 import type { PGLiteDatabase } from "@funk-tree/db/pglite";
 import type { NewLocation } from "@funk-tree/db/schema";
 
@@ -139,6 +140,7 @@ export async function populateLocations(db: PGLiteDatabase): Promise<void> {
     if (result) {
       const newLocation: NewLocation = {
         rawLocation: location,
+        locationKey: normalizeLocationKey(location),
         latitude: result.latitude,
         longitude: result.longitude,
         normalizedName: result.normalizedName,
