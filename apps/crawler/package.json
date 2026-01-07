@@ -3,22 +3,27 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "bun run src/index.ts",
-    "crawl": "bun run src/index.ts crawl",
+    "dev": "bun run src/main.ts",
+    "crawl": "bun run src/main.ts crawl",
     "migrate": "bun run src/migrate.ts",
     "backfill-keys": "bun run src/backfill-location-keys.ts",
-    "status": "bun run src/index.ts status",
-    "geocode": "bun run src/index.ts geocode",
-    "export": "bun run src/index.ts export",
+    "status": "bun run src/main.ts status",
+    "geocode": "bun run src/main.ts geocode",
+    "export": "bun run src/main.ts export",
+    "crawl:legacy": "bun run src/index.ts crawl",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@effect/platform": "^0.72.0",
+    "@effect/platform-node": "^0.67.0",
+    "@effect/schema": "^0.75.5",
     "@electric-sql/pglite": "^0.2.17",
     "@funk-tree/db": "workspace:*",
     "dotenv": "catalog:",
-    "drizzle-orm": "^0.45.1"
+    "drizzle-orm": "^0.45.1",
+    "effect": "^3.12.0"
   },
   "devDependencies": {
     "@funk-tree/config": "workspace:*",

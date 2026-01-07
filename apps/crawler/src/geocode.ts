@@ -58,6 +58,9 @@ async function geocodeWithMapbox(rawLocation: string): Promise<GeocodeResult | n
     }
 
     const feature = data.features[0];
+    if (!feature) {
+      return null;
+    }
     const [longitude, latitude] = feature.center;
 
     // Parse context for country, state, city
@@ -129,7 +132,8 @@ export async function populateLocations(db: PGLiteDatabase): Promise<void> {
   let failed = 0;
 
   for (let i = 0; i < toGeocode.length; i++) {
-    const { location } = toGeocode[i];
+    const item = toGeocode[i];
+    const location = item?.location;
     if (!location) continue;
 
     const progress = `[${i + 1}/${toGeocode.length}]`;
