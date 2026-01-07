@@ -1,7 +1,7 @@
 import { db } from "@funk-tree/db";
-import { persons, relationships } from "@funk-tree/db/schema";
+import { persons, relationships, locations } from "@funk-tree/db/schema";
 import { z } from "zod";
-import { and, eq, ilike, or, sql } from "drizzle-orm";
+import { and, eq, ilike, or, sql, isNotNull } from "drizzle-orm";
 
 import { publicProcedure } from "../index";
 
@@ -210,6 +210,164 @@ export const getStats = publicProcedure.handler(async () => {
   };
 });
 
+// Get map data with geocoded birth locations
+export const getMapData = publicProcedure
+  .input(
+    z.object({
+      minYear: z.number().optional(),
+      maxYear: z.number().optional(),
+    }),
+  )
+  .handler(async ({ input }) => {
+    // Join persons with locations on birth_location = raw_location
+    const result = await db
+      .select({
+        wikiId: persons.wikiId,
+        name: persons.name,
+        firstName: persons.firstName,
+        lastName: persons.lastNameBirth,
+        birthDate: persons.birthDate,
+        gender: persons.gender,
+        latitude: locations.latitude,
+        longitude: locations.longitude,
+        locationName: locations.normalizedName,
+        state: locations.state,
+        city: locations.city,
+      })
+      .from(persons)
+      .innerJoin(locations, eq(persons.birthLocation, locations.rawLocation))
+      .where(and(isNotNull(locations.latitude), isNotNull(locations.longitude)));
+
+    // Parse years and filter if needed
+    const personsWithYears = result.map((row) => {
+      const yearMatch = row.birthDate?.match(/^(\d{4})/);
+      const birthYear = yearMatch?.[1] ? parseInt(yearMatch[1], 10) : null;
+      return { ...row, birthYear };
+    });
+
+    // Apply year filters
+    let filtered = personsWithYears;
+    if (input.minYear !== undefined) {
+      const minYear = input.minYear;
+      filtered = filtered.filter((p) => p.birthYear === null || p.birthYear >= minYear);
+    }
+    if (input.maxYear !== undefined) {
+      const maxYear = input.maxYear;
+      filtered = filtered.filter((p) => p.birthYear === null || p.birthYear <= maxYear);
+    }
+
+    // Group by location for clustering
+    const byLocation = new Map<
+      string,
+      {
+        id: string;
+        latitude: number;
+        longitude: number;
+        locationName: string;
+        state: string | null;
+        city: string | null;
+        personCount: number;
+        persons: Array<{
+          wikiId: string;
+          name: string | null;
+          birthYear: number | null;
+          gender: string | null;
+        }>;
+        yearRange: [number, number];
+      }
+    >();
+
+    for (const row of filtered) {
+      if (row.latitude === null || row.longitude === null) continue;
+
+      const key = `${row.latitude},${row.longitude}`;
+
+      if (!byLocation.has(key)) {
+        byLocation.set(key, {
+          id: key,
+          latitude: row.latitude,
+          longitude: row.longitude,
+          locationName: row.locationName || row.city || row.state || "Unknown",
+          state: row.state,
+          city: row.city,
+          personCount: 0,
+          persons: [],
+          yearRange: [row.birthYear ?? 9999, row.birthYear ?? 0],
+        });
+      }
+
+      const point = byLocation.get(key);
+      if (!point) continue;
+      point.personCount++;
+      point.persons.push({
+        wikiId: row.wikiId,
+        name: row.name || `${row.firstName || ""} ${row.lastName || ""}`.trim() || null,
+        birthYear: row.birthYear,
+        gender: row.gender,
+      });
+
+      if (row.birthYear !== null) {
+        point.yearRange = [
+          Math.min(point.yearRange[0], row.birthYear),
+          Math.max(point.yearRange[1], row.birthYear),
+        ];
+      }
+    }
+
+    // Calculate overall year range
+    const allYears = filtered
+      .map((p) => p.birthYear)
+      .filter((year): year is number => year !== null);
+    const yearRange: [number, number] =
+      allYears.length > 0 ? [Math.min(...allYears), Math.max(...allYears)] : [1700, 1900];
+
+    return {
+      points: Array.from(byLocation.values()),
+      yearRange,
+      totalPersons: filtered.length,
+    };
+  });
+
+// Get geocoding progress status
+export const getGeocodingStatus = publicProcedure.handler(async () => {
+  // Count unique birth locations in persons
+  const uniqueLocationsResult = await db.execute(sql`
+    SELECT COUNT(DISTINCT birth_location) as count
+    FROM persons
+    WHERE birth_location IS NOT NULL AND birth_location != ''
+  `);
+  const totalLocations = Number(uniqueLocationsResult.rows[0]?.count || 0);
+
+  // Count geocoded locations
+  const geocodedResult = await db.select({ count: sql<number>`count(*)` }).from(locations);
+  const geocodedLocations = Number(geocodedResult[0]?.count || 0);
+
+  // Count persons with geocoded birth locations
+  const personsWithCoordsResult = await db.execute(sql`
+    SELECT COUNT(*) as count
+    FROM persons p
+    INNER JOIN locations l ON p.birth_location = l.raw_location
+    WHERE l.latitude IS NOT NULL
+  `);
+  const personsWithCoords = Number(personsWithCoordsResult.rows[0]?.count || 0);
+
+  // Total persons with birth locations
+  const totalPersonsResult = await db.execute(sql`
+    SELECT COUNT(*) as count
+    FROM persons
+    WHERE birth_location IS NOT NULL AND birth_location != ''
+  `);
+  const totalPersonsWithLocation = Number(totalPersonsResult.rows[0]?.count || 0);
+
+  return {
+    totalLocations,
+    geocodedLocations,
+    percentComplete: totalLocations > 0 ? (geocodedLocations / totalLocations) * 100 : 0,
+    personsWithCoords,
+    totalPersonsWithLocation,
+  };
+});
+
 // Export genealogy router
 export const genealogyRouter = {
   getPerson,
@@ -217,4 +375,6 @@ export const genealogyRouter = {
   getAncestors,
   searchPersons,
   getStats,
+  getMapData,
+  getGeocodingStatus,
 };

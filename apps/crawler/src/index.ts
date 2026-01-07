@@ -36,10 +36,17 @@ async function main() {
       break;
     }
 
+    case "geocode": {
+      const { populateLocations } = await import("./geocode");
+      await populateLocations(db);
+      break;
+    }
+
     default:
       console.log("Usage:");
       console.log("  bun run crawl [start_id]  - Start/continue crawling");
       console.log("  bun run status            - Show database status");
+      console.log("  bun run geocode           - Geocode birth locations");
   }
 
   console.log("\nDone.");

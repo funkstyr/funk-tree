@@ -1,0 +1,27 @@
+{
+  "name": "@funk-tree/map-viz",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./react": "./src/react/index.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "d3-geo": "^3.1.0",
+    "react-simple-maps": "^3.0.0"
+  },
+  "devDependencies": {
+    "@funk-tree/config": "workspace:*",
+    "@types/d3-geo": "^3.1.0",
+    "@types/react": "^19.0.0",
+    "@types/react-simple-maps": "^3.0.6",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}

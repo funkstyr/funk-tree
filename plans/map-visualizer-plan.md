@@ -8,13 +8,13 @@ An interactive map showing birth places of Funk family members over time, visual
 
 ### What Exists
 
-| Component | Status | Details |
-|-----------|--------|---------|
-| Location text data | Available | `persons.birthLocation` and `persons.deathLocation` as raw text strings |
-| Locations table | Schema ready | Has `latitude`, `longitude`, `country`, `state`, `city` fields |
-| Geocoding | **Not implemented** | Locations table is defined but empty - no geocoding service integrated |
-| API endpoints | Partial | `searchPersons` has location filter, but no dedicated location queries |
-| Indexes | Ready | `idx_persons_birth_location` for fast filtering |
+| Component          | Status              | Details                                                                 |
+| ------------------ | ------------------- | ----------------------------------------------------------------------- |
+| Location text data | Available           | `persons.birthLocation` and `persons.deathLocation` as raw text strings |
+| Locations table    | Schema ready        | Has `latitude`, `longitude`, `country`, `state`, `city` fields          |
+| Geocoding          | **Not implemented** | Locations table is defined but empty - no geocoding service integrated  |
+| API endpoints      | Partial             | `searchPersons` has location filter, but no dedicated location queries  |
+| Indexes            | Ready               | `idx_persons_birth_location` for fast filtering                         |
 
 ### Key Gap: Geocoding
 
@@ -42,18 +42,19 @@ WikiTree provides location data as raw text strings only - no coordinates.
 
 ### Recommended: react-simple-maps
 
-| Criteria | react-simple-maps | react-map-gl | React Leaflet |
-|----------|-------------------|--------------|---------------|
-| Bundle size | ~50KB | ~200KB+ | ~150KB |
-| Tile server | None needed (SVG) | Mapbox required | OpenStreetMap |
-| Offline capable | Yes | No | Partial |
-| Animation | via react-spring | Built-in | Limited |
-| TypeScript | Good | Excellent | Good |
-| Learning curve | Low | Medium | Medium |
-| Cost | Free | Mapbox pricing | Free |
-| Best for | Static geography + data overlay | Interactive tiles | General purpose |
+| Criteria        | react-simple-maps               | react-map-gl      | React Leaflet   |
+| --------------- | ------------------------------- | ----------------- | --------------- |
+| Bundle size     | ~50KB                           | ~200KB+           | ~150KB          |
+| Tile server     | None needed (SVG)               | Mapbox required   | OpenStreetMap   |
+| Offline capable | Yes                             | No                | Partial         |
+| Animation       | via react-spring                | Built-in          | Limited         |
+| TypeScript      | Good                            | Excellent         | Good            |
+| Learning curve  | Low                             | Medium            | Medium          |
+| Cost            | Free                            | Mapbox pricing    | Free            |
+| Best for        | Static geography + data overlay | Interactive tiles | General purpose |
 
 **Why react-simple-maps:**
+
 - SVG-based, no external tile service required
 - Thin wrapper around d3-geo and topojson
 - Integrates well with react-spring for animations
@@ -63,6 +64,7 @@ WikiTree provides location data as raw text strings only - no coordinates.
 ### Alternative: deck.gl (for future scale)
 
 If we need WebGL performance for 100k+ points, deck.gl provides:
+
 - ScatterplotLayer for location markers
 - ArcLayer for migration paths
 - Automatic clustering
@@ -505,18 +507,19 @@ const links = [
 ### Expected Data Volume
 
 Based on WikiTree Funk family data:
+
 - ~2,000-5,000 persons in tree
 - ~500-1,000 unique birth locations
 - Primarily Pennsylvania, Virginia, Ohio, Indiana migration pattern
 
 ### Geocoding Strategy
 
-| Service | Pros | Cons | Cost |
-|---------|------|------|------|
-| **Nominatim (OSM)** | Free, no API key | 1 req/sec limit, less accurate for historical | Free |
-| **Mapbox** | Fast, accurate, batch API | Requires account | Free tier: 100k/month |
-| **Google Geocoding** | Most accurate | Expensive at scale | $5/1000 requests |
-| **Photon (OSM-based)** | Self-hostable, free | Setup required | Free |
+| Service                | Pros                      | Cons                                          | Cost                  |
+| ---------------------- | ------------------------- | --------------------------------------------- | --------------------- |
+| **Nominatim (OSM)**    | Free, no API key          | 1 req/sec limit, less accurate for historical | Free                  |
+| **Mapbox**             | Fast, accurate, batch API | Requires account                              | Free tier: 100k/month |
+| **Google Geocoding**   | Most accurate             | Expensive at scale                            | $5/1000 requests      |
+| **Photon (OSM-based)** | Self-hostable, free       | Setup required                                | Free                  |
 
 **Recommendation:** Start with Nominatim for MVP, upgrade to Mapbox if accuracy issues arise.
 
@@ -527,6 +530,7 @@ Based on WikiTree Funk family data:
 3. **Non-US locations**: German Palatinate origins before immigration
 
 **Mitigation:**
+
 - Add state/country fallbacks for vague locations
 - Create manual override table for known historical places
 - Focus on post-immigration (USA) data initially
@@ -587,6 +591,7 @@ Based on WikiTree Funk family data:
 ## Implementation Phases
 
 ### MVP (Phase 1)
+
 - [ ] Geocoding service integration (Nominatim)
 - [ ] Populate locations table
 - [ ] Basic API endpoint for map data
@@ -595,12 +600,14 @@ Based on WikiTree Funk family data:
 - [ ] Basic `/map` route
 
 ### Enhancement (Phase 2)
+
 - [ ] Play/pause time animation
 - [ ] Location clustering for dense areas
 - [ ] Click to show persons at location
 - [ ] Link to tree view from map
 
 ### Full (Phase 3)
+
 - [ ] Migration paths (arcs between parent/child locations)
 - [ ] State-level heatmap view
 - [ ] Filter by generation/surname

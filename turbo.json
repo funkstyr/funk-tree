@@ -53,6 +53,9 @@
     },
     "status": {
       "cache": false
+    },
+    "geocode": {
+      "cache": false
     }
   }
 }
