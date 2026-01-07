@@ -1,5 +1,7 @@
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
+import { migrate } from "drizzle-orm/pglite/migrator";
+import path from "path";
 
 import * as schema from "./schema";
 
@@ -40,3 +42,21 @@ export function createBrowserDb(dbName: string = "funk-tree") {
 }
 
 export { schema };
+
+/**
+ * Run Drizzle migrations on a PGLite database.
+ * This syncs the database schema with the Drizzle schema definitions.
+ *
+ * @param db - The Drizzle PGLite database instance
+ *
+ * @example
+ * const db = createPGLiteDb("./data/pglite");
+ * await migratePGLiteDb(db);
+ */
+export async function migratePGLiteDb(db: PGLiteDatabase): Promise<void> {
+  const migrationsFolder = path.join(
+    import.meta.dirname,
+    "migrations"
+  );
+  await migrate(db, { migrationsFolder });
+}

@@ -1,4 +1,4 @@
-import { createPGLiteDb } from "@funk-tree/db/pglite";
+import { createPGLiteDb, migratePGLiteDb } from "@funk-tree/db/pglite";
 import { WikiTreeCrawler } from "./crawler";
 
 const DATA_DIR = "../../data/pglite";
@@ -16,8 +16,8 @@ async function main() {
   // Initialize database
   console.log(`Initializing PGLite database at: ${DATA_DIR}`);
   const db = createPGLiteDb(DATA_DIR);
+  await migratePGLiteDb(db);
   const crawler = new WikiTreeCrawler(db);
-  await crawler.initialize();
 
   switch (command) {
     case "crawl": {

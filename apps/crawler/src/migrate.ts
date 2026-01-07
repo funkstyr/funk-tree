@@ -2,8 +2,12 @@
  * Migration script to import existing JSON data from Python crawler
  */
 
-import { createPGLiteDb } from "@funk-tree/db/pglite";
-import { sql } from "drizzle-orm";
+import { createPGLiteDb, migratePGLiteDb } from "@funk-tree/db/pglite";
+import {
+  persons,
+  crawlQueue,
+  type NewPerson,
+} from "@funk-tree/db/schema";
 import { WikiTreeCrawler } from "./crawler";
 
 const DATA_DIR = "../../data/pglite";
@@ -65,8 +69,8 @@ async function migrate() {
   // Initialize database
   console.log(`Initializing PGLite database at: ${DATA_DIR}`);
   const db = createPGLiteDb(DATA_DIR);
+  await migratePGLiteDb(db);
   const crawler = new WikiTreeCrawler(db);
-  await crawler.initialize();
 
   // Import persons
   console.log("\nImporting persons...");
@@ -75,50 +79,36 @@ async function migrate() {
 
   for (const [wikiId, person] of Object.entries(progressData.persons)) {
     try {
-      await db.execute(sql`
-        INSERT INTO persons (
-          wiki_id, wiki_numeric_id, name, first_name, middle_name,
-          last_name_birth, last_name_current, suffix, gender,
-          birth_date, death_date, birth_location, death_location,
-          is_living, generation, father_wiki_id, mother_wiki_id
-        ) VALUES (
-          ${wikiId},
-          ${person.id || null},
-          ${person.name || null},
-          ${person.first_name || null},
-          ${person.middle_name || null},
-          ${person.last_name_birth || null},
-          ${person.last_name_current || null},
-          ${person.suffix || null},
-          ${person.gender || null},
-          ${person.birth_date || null},
-          ${person.death_date || null},
-          ${person.birth_location || null},
-          ${person.death_location || null},
-          ${person.is_living === 1},
-          ${person.generation || null},
-          ${person.father_id ? String(person.father_id) : null},
-          ${person.mother_id ? String(person.mother_id) : null}
-        )
-        ON CONFLICT (wiki_id) DO UPDATE SET
-          wiki_numeric_id = EXCLUDED.wiki_numeric_id,
-          name = EXCLUDED.name,
-          first_name = EXCLUDED.first_name,
-          middle_name = EXCLUDED.middle_name,
-          last_name_birth = EXCLUDED.last_name_birth,
-          last_name_current = EXCLUDED.last_name_current,
-          suffix = EXCLUDED.suffix,
-          gender = EXCLUDED.gender,
-          birth_date = EXCLUDED.birth_date,
-          death_date = EXCLUDED.death_date,
-          birth_location = EXCLUDED.birth_location,
-          death_location = EXCLUDED.death_location,
-          is_living = EXCLUDED.is_living,
-          generation = EXCLUDED.generation,
-          father_wiki_id = EXCLUDED.father_wiki_id,
-          mother_wiki_id = EXCLUDED.mother_wiki_id,
-          updated_at = NOW()
-      `);
+      const personData: NewPerson = {
+        wikiId,
+        wikiNumericId: person.id ?? null,
+        name: person.name ?? null,
+        firstName: person.first_name ?? null,
+        middleName: person.middle_name ?? null,
+        lastNameBirth: person.last_name_birth ?? null,
+        lastNameCurrent: person.last_name_current ?? null,
+        suffix: person.suffix ?? null,
+        gender: person.gender ?? null,
+        birthDate: person.birth_date ?? null,
+        deathDate: person.death_date ?? null,
+        birthLocation: person.birth_location ?? null,
+        deathLocation: person.death_location ?? null,
+        isLiving: person.is_living === 1,
+        generation: person.generation ?? null,
+        fatherWikiId: person.father_id ? String(person.father_id) : null,
+        motherWikiId: person.mother_id ? String(person.mother_id) : null,
+      };
+
+      await db
+        .insert(persons)
+        .values(personData)
+        .onConflictDoUpdate({
+          target: persons.wikiId,
+          set: {
+            ...personData,
+            updatedAt: new Date(),
+          },
+        });
       imported++;
 
       if (imported % 100 === 0) {
@@ -142,11 +132,10 @@ async function migrate() {
     if (visitedSet.has(wikiId)) continue;
 
     try {
-      await db.execute(sql`
-        INSERT INTO crawl_queue (wiki_id, status)
-        VALUES (${wikiId}, 'pending')
-        ON CONFLICT (wiki_id) DO NOTHING
-      `);
+      await db
+        .insert(crawlQueue)
+        .values({ wikiId, status: "pending" })
+        .onConflictDoNothing();
       queueImported++;
     } catch {
       // Ignore duplicates
@@ -158,13 +147,20 @@ async function migrate() {
   let markedComplete = 0;
   for (const wikiId of progressData.visited) {
     try {
-      await db.execute(sql`
-        INSERT INTO crawl_queue (wiki_id, status, processed_at)
-        VALUES (${wikiId}, 'completed', NOW())
-        ON CONFLICT (wiki_id) DO UPDATE SET
-          status = 'completed',
-          processed_at = NOW()
-      `);
+      await db
+        .insert(crawlQueue)
+        .values({
+          wikiId,
+          status: "completed",
+          processedAt: new Date(),
+        })
+        .onConflictDoUpdate({
+          target: crawlQueue.wikiId,
+          set: {
+            status: "completed",
+            processedAt: new Date(),
+          },
+        });
       markedComplete++;
     } catch {
       // Ignore
