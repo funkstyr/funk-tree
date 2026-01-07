@@ -1,6 +1,10 @@
 import { useCallback, useMemo, useState } from "react";
 
-import { FamilyTreeWithWorker, type RawPerson, type Person as VizPerson } from "@funk-tree/tree-viz";
+import {
+  FamilyTreeWithWorker,
+  type RawPerson,
+  type Person as VizPerson,
+} from "@funk-tree/tree-viz";
 
 import type { Person } from "./person-card";
 import { PersonCard } from "./person-card";
@@ -16,10 +20,7 @@ export function FamilyTree({ data, rootWikiId, onPersonClick }: FamilyTreeProps)
 
   // Transform DB persons to tree-viz RawPerson format
   // tree-viz RawPerson uses snake_case matching DB schema
-  const rawPersons = useMemo(
-    () => data as unknown as RawPerson[],
-    [data]
-  );
+  const rawPersons = useMemo(() => data as unknown as RawPerson[], [data]);
 
   // Handle person selection from tree-viz
   const handlePersonSelect = useCallback(
@@ -36,7 +37,7 @@ export function FamilyTree({ data, rootWikiId, onPersonClick }: FamilyTreeProps)
         onPersonClick?.(vizPerson.wikiId);
       }
     },
-    [data, onPersonClick]
+    [data, onPersonClick],
   );
 
   if (data.length === 0) {

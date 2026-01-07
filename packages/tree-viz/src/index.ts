@@ -23,10 +23,7 @@ export { SpatialIndex } from "./core/spatial/rtree";
 
 // React components
 export { FamilyTree, type FamilyTreeProps } from "./react/FamilyTree";
-export {
-  FamilyTreeWithWorker,
-  type FamilyTreeWithWorkerProps,
-} from "./react/FamilyTreeWithWorker";
+export { FamilyTreeWithWorker, type FamilyTreeWithWorkerProps } from "./react/FamilyTreeWithWorker";
 
 // PixiJS components (for advanced usage)
 export { TreeStage } from "./pixi/components/TreeStage";

@@ -9,7 +9,11 @@
       "default": "./src/*.ts"
     }
   },
-  "scripts": {},
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
   "dependencies": {
     "@funk-tree/auth": "workspace:*",
     "@funk-tree/db": "workspace:*",
@@ -23,6 +27,8 @@
   },
   "devDependencies": {
     "@funk-tree/config": "workspace:*",
-    "typescript": "catalog:"
+    "@vitest/coverage-v8": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

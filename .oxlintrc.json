@@ -93,6 +93,9 @@
     "typescript/restrict-template-expressions": "warn",
     "typescript/triple-slash-reference": "warn",
     "typescript/unbound-method": "warn",
+    "typescript/no-misused-promises": "warn",
+    "typescript/no-non-null-assertion": "warn",
+    "typescript/no-explicit-any": "warn",
     "unicorn/no-await-in-promise-methods": "warn",
     "unicorn/no-empty-file": "warn",
     "unicorn/no-invalid-fetch-options": "warn",
@@ -139,5 +142,14 @@
     "builtin": true
   },
   "globals": {},
-  "ignorePatterns": []
+  "ignorePatterns": [],
+  "overrides": [
+    {
+      "files": ["*.test.ts", "*.test.tsx", "*.spec.ts", "*.spec.tsx"],
+      "rules": {
+        "typescript/no-non-null-assertion": "off",
+        "require-yield": "off"
+      }
+    }
+  ]
 }

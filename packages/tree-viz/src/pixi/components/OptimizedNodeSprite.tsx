@@ -76,12 +76,7 @@ export function OptimizedNodeSprite({
       onPointerLeave={() => onHover?.(null)}
     >
       {/* Background sprite with tinting - enables maximum batching */}
-      <pixiSprite
-        texture={baseTexture}
-        tint={tint}
-        width={width}
-        height={height}
-      />
+      <pixiSprite texture={baseTexture} tint={tint} width={width} height={height} />
 
       {/* Highlight border when hovered */}
       {highlighted && (

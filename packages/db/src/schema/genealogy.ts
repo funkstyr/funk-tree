@@ -38,7 +38,7 @@ export const persons = pgTable(
     index("idx_persons_wiki_id").on(table.wikiId),
     index("idx_persons_birth_location").on(table.birthLocation),
     index("idx_persons_last_name").on(table.lastNameBirth),
-  ]
+  ],
 );
 
 // Relationships between persons (parent-child, spouse)
@@ -58,12 +58,8 @@ export const relationships = pgTable(
   (table) => [
     index("idx_relationships_person").on(table.personId),
     index("idx_relationships_related").on(table.relatedPersonId),
-    unique("unique_relationship").on(
-      table.personId,
-      table.relatedPersonId,
-      table.relationshipType
-    ),
-  ]
+    unique("unique_relationship").on(table.personId, table.relatedPersonId, table.relationshipType),
+  ],
 );
 
 // Crawl queue for WikiTree profiles to fetch
@@ -83,7 +79,7 @@ export const crawlQueue = pgTable(
   (table) => [
     index("idx_queue_status").on(table.status),
     index("idx_queue_priority").on(table.priority),
-  ]
+  ],
 );
 
 // Geocoded locations cache
@@ -100,7 +96,7 @@ export const locations = pgTable(
     city: text("city"),
     geocodedAt: timestamp("geocoded_at"),
   },
-  (table) => [index("idx_locations_raw").on(table.rawLocation)]
+  (table) => [index("idx_locations_raw").on(table.rawLocation)],
 );
 
 // Crawl metadata for tracking progress

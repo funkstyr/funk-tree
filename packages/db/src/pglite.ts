@@ -54,9 +54,6 @@ export { schema };
  * await migratePGLiteDb(db);
  */
 export async function migratePGLiteDb(db: PGLiteDatabase): Promise<void> {
-  const migrationsFolder = path.join(
-    import.meta.dirname,
-    "migrations"
-  );
+  const migrationsFolder = path.join(import.meta.dirname, "migrations");
   await migrate(db, { migrationsFolder });
 }

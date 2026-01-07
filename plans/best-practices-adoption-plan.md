@@ -16,20 +16,20 @@ This document audits the `funk-tree` repo against the mature `bun-poc` repo and 
 
 ### Current State Comparison
 
-| Aspect | funk-tree | bun-poc | Gap |
-|--------|-----------|---------|-----|
-| **TypeScript Config** | Basic strict mode | Full strict + incremental builds | Medium |
-| **Linting** | Oxlint (basic) | Oxlint (type-aware rules) | Medium |
-| **Formatting** | Oxfmt | Oxfmt | None |
-| **Testing** | None configured | Vitest + Playwright | Critical |
-| **CI/CD** | None | GitHub Actions (full pipeline) | Critical |
-| **Git Hooks** | None | Husky + lint-staged | High |
-| **CLAUDE.md** | None | Comprehensive documentation | Critical |
-| **Claude Commands** | None | 7 custom commands | High |
-| **Claude Skills** | None | 10+ specialized skills | Medium |
-| **Package Catalog** | Partial | Comprehensive (80+ deps) | Low |
-| **Vitest Config Factory** | None | Shared via @bts/vitest | High |
-| **tsdown Config** | Per-package | Shared via @bts/tsdown | Low |
+| Aspect                    | funk-tree         | bun-poc                          | Gap      |
+| ------------------------- | ----------------- | -------------------------------- | -------- |
+| **TypeScript Config**     | Basic strict mode | Full strict + incremental builds | Medium   |
+| **Linting**               | Oxlint (basic)    | Oxlint (type-aware rules)        | Medium   |
+| **Formatting**            | Oxfmt             | Oxfmt                            | None     |
+| **Testing**               | None configured   | Vitest + Playwright              | Critical |
+| **CI/CD**                 | None              | GitHub Actions (full pipeline)   | Critical |
+| **Git Hooks**             | None              | Husky + lint-staged              | High     |
+| **CLAUDE.md**             | None              | Comprehensive documentation      | Critical |
+| **Claude Commands**       | None              | 7 custom commands                | High     |
+| **Claude Skills**         | None              | 10+ specialized skills           | Medium   |
+| **Package Catalog**       | Partial           | Comprehensive (80+ deps)         | Low      |
+| **Vitest Config Factory** | None              | Shared via @bts/vitest           | High     |
+| **tsdown Config**         | Per-package       | Shared via @bts/tsdown           | Low      |
 
 ---
 
@@ -40,6 +40,7 @@ This document audits the `funk-tree` repo against the mature `bun-poc` repo and 
 **funk-tree**: No CLAUDE.md file exists.
 
 **bun-poc**: Comprehensive 500+ line CLAUDE.md with:
+
 - Command reference
 - Post-change verification steps
 - Architecture patterns (oRPC, route protection, type safety)
@@ -54,6 +55,7 @@ This document audits the `funk-tree` repo against the mature `bun-poc` repo and 
 ### 2. TypeScript Configuration (Medium)
 
 **funk-tree** (`packages/config/tsconfig.base.json`):
+
 ```json
 {
   "compilerOptions": {
@@ -74,6 +76,7 @@ This document audits the `funk-tree` repo against the mature `bun-poc` repo and 
 ```
 
 **bun-poc** (additional settings):
+
 ```json
 {
   "compilerOptions": {
@@ -89,6 +92,7 @@ This document audits the `funk-tree` repo against the mature `bun-poc` repo and 
 ```
 
 **Missing**:
+
 - `incremental` builds (faster type-checking)
 - `tsBuildInfoFile` for caching
 - `forceConsistentCasingInFileNames` (cross-platform safety)
@@ -98,10 +102,12 @@ This document audits the `funk-tree` repo against the mature `bun-poc` repo and 
 ### 3. Oxlint Type-Aware Rules (Medium)
 
 **funk-tree** (`.oxlintrc.json`):
+
 - Basic rules enabled
 - No type-aware linting
 
 **bun-poc** (additional rules):
+
 ```json
 {
   "rules": {
@@ -116,6 +122,7 @@ This document audits the `funk-tree` repo against the mature `bun-poc` repo and 
 ```
 
 **Missing**:
+
 - Type-aware linting rules catch promise handling bugs
 - `check:type-aware` script for deeper analysis
 - Test file overrides (relaxed rules in `*.test.ts`)
@@ -127,6 +134,7 @@ This document audits the `funk-tree` repo against the mature `bun-poc` repo and 
 **funk-tree**: No testing framework configured.
 
 **bun-poc**:
+
 - Vitest 4.x with workspace support
 - Shared config factory (`@bts/vitest`)
 - Coverage reporting with merge tool
@@ -134,6 +142,7 @@ This document audits the `funk-tree` repo against the mature `bun-poc` repo and 
 - Evalite for LLM evaluations
 
 **Missing**:
+
 - `vitest.workspace.ts` at root
 - Shared vitest config package
 - Per-package `vitest.config.ts`
@@ -147,6 +156,7 @@ This document audits the `funk-tree` repo against the mature `bun-poc` repo and 
 **funk-tree**: No CI/CD configured.
 
 **bun-poc** (`.github/workflows/ci.yml`):
+
 - Lint job (oxlint)
 - Format check job (oxfmt --check)
 - Build job (turbo build)
@@ -156,6 +166,7 @@ This document audits the `funk-tree` repo against the mature `bun-poc` repo and 
 - Turbo remote caching
 
 **Missing**:
+
 - Entire GitHub Actions setup
 - Branch protection enforcement
 - Automated quality gates
@@ -167,11 +178,13 @@ This document audits the `funk-tree` repo against the mature `bun-poc` repo and 
 **funk-tree**: No git hooks.
 
 **bun-poc**:
+
 - Husky for hook management
 - lint-staged for staged file processing
 - Non-blocking pre-commit (warns but allows commit)
 
 **Missing**:
+
 - `.husky/` directory
 - `.lintstagedrc.mjs` configuration
 - Pre-commit hook script
@@ -194,6 +207,7 @@ This document audits the `funk-tree` repo against the mature `bun-poc` repo and 
 | `/debug-apis` | C# API debugging |
 
 **bun-poc** (`.claude/skills/`):
+
 - `write/` - Code generation patterns
 - `understand/` - Code comprehension
 - `find/` - Search strategies
@@ -208,11 +222,13 @@ This document audits the `funk-tree` repo against the mature `bun-poc` repo and 
 ### 8. Turbo Configuration (Low)
 
 **funk-tree** (`turbo.json`):
+
 - Basic task configuration
 - No concurrency tuning
 - No remote caching
 
 **bun-poc**:
+
 ```json
 {
   "ui": "tui",
@@ -223,6 +239,7 @@ This document audits the `funk-tree` repo against the mature `bun-poc` repo and 
 ```
 
 **Missing**:
+
 - TUI mode for better UX
 - Higher concurrency
 - Remote cache configuration
@@ -235,6 +252,7 @@ This document audits the `funk-tree` repo against the mature `bun-poc` repo and 
 ### Phase 1: Foundation (Critical)
 
 #### 1.1 Create CLAUDE.md
+
 Create comprehensive documentation for Claude at repo root:
 
 ```markdown
@@ -248,16 +266,19 @@ Create comprehensive documentation for Claude at repo root:
 ```
 
 **Files to create**:
+
 - `CLAUDE.md` (root)
 
 #### 1.2 Add Testing Infrastructure
 
 **Files to create**:
+
 - `packages/config/vitest.config.base.ts` - Shared vitest config
 - `vitest.workspace.ts` - Workspace configuration
 - Per-package `vitest.config.ts` files
 
 **Scripts to add** (root `package.json`):
+
 ```json
 {
   "test": "vitest run",
@@ -267,6 +288,7 @@ Create comprehensive documentation for Claude at repo root:
 ```
 
 **Dependencies to add**:
+
 ```json
 {
   "vitest": "^4.0.15",
@@ -277,9 +299,11 @@ Create comprehensive documentation for Claude at repo root:
 #### 1.3 Set Up CI/CD
 
 **Files to create**:
+
 - `.github/workflows/ci.yml`
 
 **Jobs**:
+
 1. `lint` - Run oxlint
 2. `format` - Check oxfmt
 3. `build` - Turbo build
@@ -294,6 +318,7 @@ Create comprehensive documentation for Claude at repo root:
 #### 2.1 Add Git Hooks
 
 **Dependencies to add**:
+
 ```json
 {
   "husky": "^9.1.7",
@@ -302,10 +327,12 @@ Create comprehensive documentation for Claude at repo root:
 ```
 
 **Files to create**:
+
 - `.husky/pre-commit`
 - `.lintstagedrc.mjs`
 
 **Pre-commit hook** (non-blocking):
+
 ```bash
 #!/bin/sh
 bunx lint-staged || echo "Lint warnings (non-blocking)"
@@ -315,6 +342,7 @@ exit 0
 #### 2.2 Add Claude Commands
 
 **Files to create**:
+
 - `.claude/commands/research.md`
 - `.claude/commands/find.md`
 - `.claude/commands/understand.md`
@@ -324,6 +352,7 @@ exit 0
 #### 2.3 Enhance TypeScript Config
 
 **Update** `packages/config/tsconfig.base.json`:
+
 ```json
 {
   "compilerOptions": {
@@ -342,6 +371,7 @@ exit 0
 #### 3.1 Add Type-Aware Linting
 
 **Update** `.oxlintrc.json`:
+
 ```json
 {
   "rules": {
@@ -362,6 +392,7 @@ exit 0
 ```
 
 **Add script** (root `package.json`):
+
 ```json
 {
   "check:type-aware": "oxlint --tsconfig tsconfig.json"
@@ -371,6 +402,7 @@ exit 0
 #### 3.2 Add Claude Skills
 
 **Files to create**:
+
 - `.claude/skills/type-safety/index.md`
 - `.claude/skills/write/index.md`
 - `.claude/skills/test/index.md`
@@ -382,6 +414,7 @@ exit 0
 #### 4.1 Enhance Turbo Config
 
 **Update** `turbo.json`:
+
 ```json
 {
   "ui": "tui",
@@ -398,18 +431,18 @@ Review and expand the workspace catalog in root `package.json` to include all sh
 
 ## Priority Matrix
 
-| Priority | Item | Effort | Impact |
-|----------|------|--------|--------|
-| P0 | CLAUDE.md | Low | High |
-| P0 | CI/CD Pipeline | Medium | High |
-| P0 | Testing Setup | Medium | High |
-| P1 | Git Hooks | Low | Medium |
-| P1 | Claude Commands | Medium | Medium |
-| P1 | TypeScript Config | Low | Medium |
-| P2 | Type-Aware Linting | Low | Medium |
-| P2 | Claude Skills | Medium | Medium |
-| P3 | Turbo Optimization | Low | Low |
-| P3 | Catalog Consolidation | Low | Low |
+| Priority | Item                  | Effort | Impact |
+| -------- | --------------------- | ------ | ------ |
+| P0       | CLAUDE.md             | Low    | High   |
+| P0       | CI/CD Pipeline        | Medium | High   |
+| P0       | Testing Setup         | Medium | High   |
+| P1       | Git Hooks             | Low    | Medium |
+| P1       | Claude Commands       | Medium | Medium |
+| P1       | TypeScript Config     | Low    | Medium |
+| P2       | Type-Aware Linting    | Low    | Medium |
+| P2       | Claude Skills         | Medium | Medium |
+| P3       | Turbo Optimization    | Low    | Low    |
+| P3       | Catalog Consolidation | Low    | Low    |
 
 ---
 

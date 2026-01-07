@@ -6,16 +6,21 @@
     "dev": "bun run src/index.ts",
     "crawl": "bun run src/index.ts crawl",
     "migrate": "bun run src/migrate.ts",
-    "status": "bun run src/index.ts status"
+    "status": "bun run src/index.ts status",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@funk-tree/db": "workspace:*",
     "@electric-sql/pglite": "^0.2.17",
+    "@funk-tree/db": "workspace:*",
     "drizzle-orm": "^0.45.1"
   },
   "devDependencies": {
     "@funk-tree/config": "workspace:*",
     "@types/bun": "catalog:",
-    "typescript": "catalog:"
+    "@vitest/coverage-v8": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

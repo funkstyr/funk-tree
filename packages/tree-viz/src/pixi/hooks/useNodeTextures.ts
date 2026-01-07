@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 import { useApplication } from "@pixi/react";
-import {
-  NodeTextureManager,
-  type NodeTextureConfig,
-} from "../textures/NodeTextureManager";
+import { NodeTextureManager, type NodeTextureConfig } from "../textures/NodeTextureManager";
 
 const DEFAULT_CONFIG: NodeTextureConfig = {
   width: 180,

@@ -46,12 +46,7 @@ export function FamilyTree({
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
 
   // Viewport management
-  const {
-    viewport,
-    handlers,
-    getVisibleBounds,
-    fitToBounds,
-  } = useViewport({
+  const { viewport, handlers, getVisibleBounds, fitToBounds } = useViewport({
     minScale: 0.05,
     maxScale: 2,
   });
@@ -102,7 +97,7 @@ export function FamilyTree({
   // Get visible bounds
   const visibleBounds = useMemo(
     () => getVisibleBounds(dimensions.width, dimensions.height),
-    [viewport, dimensions, getVisibleBounds]
+    [viewport, dimensions, getVisibleBounds],
   );
 
   // Filter visible nodes using spatial index
@@ -126,8 +121,7 @@ export function FamilyTree({
 
     const visibleNodeIds = new Set(visibleNodes.map((n) => n.id));
     return Array.from(treeState.edges.values()).filter(
-      (edge) =>
-        visibleNodeIds.has(edge.sourceId) || visibleNodeIds.has(edge.targetId)
+      (edge) => visibleNodeIds.has(edge.sourceId) || visibleNodeIds.has(edge.targetId),
     );
   }, [treeState, visibleNodes]);
 
@@ -142,7 +136,7 @@ export function FamilyTree({
         onPersonSelect?.(node.person);
       }
     },
-    [treeState, onPersonSelect]
+    [treeState, onPersonSelect],
   );
 
   const handleHover = useCallback(
@@ -153,7 +147,7 @@ export function FamilyTree({
       const node = nodeId ? treeState.nodes.get(nodeId) : null;
       onPersonHover?.(node?.person || null);
     },
-    [treeState, onPersonHover]
+    [treeState, onPersonHover],
   );
 
   // Handle click on background (deselect)
@@ -165,7 +159,7 @@ export function FamilyTree({
         onPersonSelect?.(null as unknown as Person);
       }
     },
-    [onPersonSelect]
+    [onPersonSelect],
   );
 
   return (

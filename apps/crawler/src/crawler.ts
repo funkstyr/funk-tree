@@ -1,10 +1,6 @@
 import { eq, sql, count, desc, asc } from "drizzle-orm";
 import type { PGLiteDatabase } from "@funk-tree/db/pglite";
-import {
-  persons,
-  crawlQueue,
-  type NewPerson,
-} from "@funk-tree/db/schema";
+import { persons, crawlQueue, type NewPerson } from "@funk-tree/db/schema";
 import { wikitreeApi, type WikiTreeProfile } from "./wikitree-api";
 
 const SAVE_INTERVAL = 25;
@@ -28,9 +24,7 @@ export class WikiTreeCrawler {
     return parts.length > 0 ? parts.join(" ") : profile.Name || "Unknown";
   }
 
-  private extractIds(
-    items: Record<string, unknown> | unknown[] | undefined
-  ): string[] {
+  private extractIds(items: Record<string, unknown> | unknown[] | undefined): string[] {
     if (!items) return [];
 
     if (Array.isArray(items)) {
@@ -78,12 +72,8 @@ export class WikiTreeCrawler {
       birthLocation: profile.BirthLocation || null,
       deathLocation: profile.DeathLocation || null,
       isLiving: profile.IsLiving === 1,
-      fatherWikiId: this.isValidId(profile.Father)
-        ? String(profile.Father)
-        : null,
-      motherWikiId: this.isValidId(profile.Mother)
-        ? String(profile.Mother)
-        : null,
+      fatherWikiId: this.isValidId(profile.Father) ? String(profile.Father) : null,
+      motherWikiId: this.isValidId(profile.Mother) ? String(profile.Mother) : null,
     };
 
     await this.db
@@ -149,7 +139,7 @@ export class WikiTreeCrawler {
   async markQueueItem(
     wikiId: string,
     status: "processing" | "completed" | "error",
-    errorMessage?: string
+    errorMessage?: string,
   ): Promise<void> {
     await this.db
       .update(crawlQueue)
@@ -157,8 +147,7 @@ export class WikiTreeCrawler {
         status,
         processedAt: new Date(),
         errorMessage: errorMessage || null,
-        retryCount:
-          status === "error" ? sql`${crawlQueue.retryCount} + 1` : undefined,
+        retryCount: status === "error" ? sql`${crawlQueue.retryCount} + 1` : undefined,
       })
       .where(eq(crawlQueue.wikiId, wikiId));
   }
@@ -169,9 +158,7 @@ export class WikiTreeCrawler {
     completedQueue: number;
     errors: number;
   }> {
-    const [personsCount] = await this.db
-      .select({ count: count() })
-      .from(persons);
+    const [personsCount] = await this.db.select({ count: count() }).from(persons);
 
     const [pendingCount] = await this.db
       .select({ count: count() })
@@ -235,7 +222,7 @@ export class WikiTreeCrawler {
 
       const currentStats = await this.getStats();
       console.log(
-        `  [Request #${this.requestCount}] Fetching: ${wikiId} (Queue: ${currentStats.pendingQueue})`
+        `  [Request #${this.requestCount}] Fetching: ${wikiId} (Queue: ${currentStats.pendingQueue})`,
       );
 
       try {
@@ -257,9 +244,7 @@ export class WikiTreeCrawler {
       // Periodic status
       if (this.requestCount % SAVE_INTERVAL === 0) {
         const s = await this.getStats();
-        console.log(
-          `  Progress: ${s.totalPersons} profiles, ${s.pendingQueue} in queue`
-        );
+        console.log(`  Progress: ${s.totalPersons} profiles, ${s.pendingQueue} in queue`);
       }
     }
 

@@ -3,11 +3,7 @@
  */
 
 import { createPGLiteDb, migratePGLiteDb } from "@funk-tree/db/pglite";
-import {
-  persons,
-  crawlQueue,
-  type NewPerson,
-} from "@funk-tree/db/schema";
+import { persons, crawlQueue, type NewPerson } from "@funk-tree/db/schema";
 import { WikiTreeCrawler } from "./crawler";
 
 const DATA_DIR = "../../data/pglite";
@@ -132,10 +128,7 @@ async function migrate() {
     if (visitedSet.has(wikiId)) continue;
 
     try {
-      await db
-        .insert(crawlQueue)
-        .values({ wikiId, status: "pending" })
-        .onConflictDoNothing();
+      await db.insert(crawlQueue).values({ wikiId, status: "pending" }).onConflictDoNothing();
       queueImported++;
     } catch {
       // Ignore duplicates

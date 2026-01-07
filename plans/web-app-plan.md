@@ -6,17 +6,18 @@ Build a web application using **TanStack Start** to visualize the Funk family ge
 
 ## Tech Stack
 
-| Layer | Technology | Rationale |
-|-------|------------|-----------|
-| Framework | TanStack Start | Full-stack React framework with SSR, server functions, type-safe routing |
-| Database | Drizzle ORM + PgLite/PostgreSQL | Already in use by crawler; seamless integration |
-| Visualization | `react-d3-tree` or `family-chart` | Purpose-built for hierarchical family data |
-| Styling | Tailwind CSS + shadcn/ui | Already configured in existing web app |
-| State | TanStack Query | Built-in support, SWR caching for genealogy data |
+| Layer         | Technology                        | Rationale                                                                |
+| ------------- | --------------------------------- | ------------------------------------------------------------------------ |
+| Framework     | TanStack Start                    | Full-stack React framework with SSR, server functions, type-safe routing |
+| Database      | Drizzle ORM + PgLite/PostgreSQL   | Already in use by crawler; seamless integration                          |
+| Visualization | `react-d3-tree` or `family-chart` | Purpose-built for hierarchical family data                               |
+| Styling       | Tailwind CSS + shadcn/ui          | Already configured in existing web app                                   |
+| State         | TanStack Query                    | Built-in support, SWR caching for genealogy data                         |
 
 ## Database Schema Reference
 
 The existing schema provides:
+
 - **persons**: Core genealogy data (name, dates, locations, parent refs)
 - **relationships**: Bidirectional links (parent/child/spouse)
 - **locations**: Geocoded location cache
@@ -32,10 +33,12 @@ Current data: ~7,000+ persons with full relationship mapping.
 Replace the current Vite + TanStack Router setup with TanStack Start for server functions.
 
 **Pros:**
+
 - Retains existing auth, components, and styling
 - Incremental migration possible
 
 **Cons:**
+
 - Migration overhead; potential breaking changes
 
 ### Option B: New TanStack Start App (Recommended)
@@ -43,11 +46,13 @@ Replace the current Vite + TanStack Router setup with TanStack Start for server 
 Create a fresh `apps/tree-viewer` using TanStack Start CLI.
 
 **Pros:**
+
 - Clean architecture from the start
 - Can copy over reusable components from `apps/web`
 - No migration conflicts
 
 **Cons:**
+
 - Some duplicate setup initially
 
 ---
@@ -62,6 +67,7 @@ Create a fresh `apps/tree-viewer` using TanStack Start CLI.
    - Set up Tailwind CSS + shadcn/ui
 
 2. **Server Functions**
+
    ```typescript
    // Example: Get person by WikiTree ID
    const getPerson = createServerFn({ method: 'GET' })
@@ -105,6 +111,7 @@ Create a fresh `apps/tree-viewer` using TanStack Start CLI.
 2. **Data Transformation**
 
    Transform database records to visualization format:
+
    ```typescript
    interface FamilyNode {
      id: string;
@@ -139,6 +146,7 @@ Create a fresh `apps/tree-viewer` using TanStack Start CLI.
    - **Date range**: Filter by birth/death year ranges
 
 2. **Server Function**
+
    ```typescript
    const searchPersons = createServerFn({ method: 'GET' })
      .validator((z) => z.object({
@@ -165,6 +173,7 @@ Create a fresh `apps/tree-viewer` using TanStack Start CLI.
 ## Data Queries
 
 ### Get Person with Relations
+
 ```sql
 SELECT p.*,
        father.name as father_name,
@@ -176,6 +185,7 @@ WHERE p.wiki_id = $1;
 ```
 
 ### Get Descendants (Recursive CTE)
+
 ```sql
 WITH RECURSIVE descendants AS (
   -- Base case: starting person
@@ -194,6 +204,7 @@ SELECT * FROM descendants;
 ```
 
 ### Full-Text Search
+
 ```sql
 SELECT * FROM persons
 WHERE
@@ -242,30 +253,35 @@ apps/tree-viewer/
 ## Implementation Steps
 
 ### Step 1: Initialize Project
+
 - Create new TanStack Start app with CLI
 - Configure monorepo integration (reference `@funk-tree/db`)
 - Set up Tailwind + shadcn/ui
 - Verify database connection
 
 ### Step 2: Build Data Layer
+
 - Create server functions for person queries
 - Implement recursive tree queries
 - Add search functionality
 - Test with existing data
 
 ### Step 3: Build Tree View
+
 - Integrate `family-chart` or `react-d3-tree`
 - Create data transformation layer
 - Implement node interactions (click, expand, details)
 - Add zoom/pan controls
 
 ### Step 4: Build Search Page
+
 - Create search input with debounced queries
 - Build filter panel
 - Implement results list with pagination
 - Link results to tree view
 
 ### Step 5: Polish & Deploy
+
 - Add loading states and error handling
 - Optimize queries for large datasets
 - Add route-based code splitting
@@ -275,15 +291,15 @@ apps/tree-viewer/
 
 ## Visualization Library Comparison
 
-| Feature | react-d3-tree | family-chart |
-|---------|---------------|--------------|
-| Spouse support | No (hierarchy only) | Yes |
-| Ancestor + Descendant view | Manual | Built-in |
-| React integration | Native | Wrapper needed |
-| Customization | High | High |
-| Bundle size | ~50KB | ~80KB |
-| TypeScript | Yes | Yes |
-| Best for | Org charts, file trees | Family trees |
+| Feature                    | react-d3-tree          | family-chart   |
+| -------------------------- | ---------------------- | -------------- |
+| Spouse support             | No (hierarchy only)    | Yes            |
+| Ancestor + Descendant view | Manual                 | Built-in       |
+| React integration          | Native                 | Wrapper needed |
+| Customization              | High                   | High           |
+| Bundle size                | ~50KB                  | ~80KB          |
+| TypeScript                 | Yes                    | Yes            |
+| Best for                   | Org charts, file trees | Family trees   |
 
 **Recommendation**: Start with `family-chart` for its genealogy-specific features. Fall back to `react-d3-tree` if integration issues arise.
 

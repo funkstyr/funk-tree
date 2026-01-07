@@ -21,7 +21,7 @@ function PersonTreePage() {
   const { data: person, isLoading: personLoading } = useQuery(
     orpc.genealogy.getPerson.queryOptions({
       input: { wikiId },
-    })
+    }),
   );
 
   const { data: treeData, isLoading: treeLoading } = useQuery(
@@ -31,7 +31,7 @@ function PersonTreePage() {
         })
       : orpc.genealogy.getAncestors.queryOptions({
           input: { wikiId, depth: 4 },
-        })
+        }),
   );
 
   const handlePersonClick = (newWikiId: string) => {
@@ -65,9 +65,7 @@ function PersonTreePage() {
 
   const displayName =
     person.name ||
-    [person.firstName, person.middleName, person.lastNameBirth]
-      .filter(Boolean)
-      .join(" ") ||
+    [person.firstName, person.middleName, person.lastNameBirth].filter(Boolean).join(" ") ||
     wikiId;
 
   const persons = (treeData || []) as Person[];
@@ -109,11 +107,7 @@ function PersonTreePage() {
         </div>
       </div>
       <div className="flex-1 overflow-hidden">
-        <FamilyTree
-          data={persons}
-          rootWikiId={wikiId}
-          onPersonClick={handlePersonClick}
-        />
+        <FamilyTree data={persons} rootWikiId={wikiId} onPersonClick={handlePersonClick} />
       </div>
     </div>
   );

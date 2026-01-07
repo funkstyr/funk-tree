@@ -31,10 +31,7 @@ export function useViewport(options: UseViewportOptions = {}) {
     (delta: number, centerX: number, centerY: number) => {
       setViewport((prev) => {
         const factor = delta > 0 ? 0.9 : 1.1;
-        const newScale = Math.max(
-          minScale,
-          Math.min(maxScale, prev.scale * factor)
-        );
+        const newScale = Math.max(minScale, Math.min(maxScale, prev.scale * factor));
 
         // Zoom towards cursor position
         const worldX = prev.x + centerX / prev.scale;
@@ -47,7 +44,7 @@ export function useViewport(options: UseViewportOptions = {}) {
         };
       });
     },
-    [minScale, maxScale]
+    [minScale, maxScale],
   );
 
   const fitToBounds = useCallback(
@@ -72,7 +69,7 @@ export function useViewport(options: UseViewportOptions = {}) {
         scale,
       });
     },
-    [minScale, maxScale]
+    [minScale, maxScale],
   );
 
   const centerOn = useCallback(
@@ -83,7 +80,7 @@ export function useViewport(options: UseViewportOptions = {}) {
         y: y - containerHeight / prev.scale / 2,
       }));
     },
-    []
+    [],
   );
 
   // Get visible bounds in world coordinates
@@ -96,7 +93,7 @@ export function useViewport(options: UseViewportOptions = {}) {
         maxY: viewport.y + containerHeight / viewport.scale,
       };
     },
-    [viewport]
+    [viewport],
   );
 
   // Screen to world coordinate conversion
@@ -107,7 +104,7 @@ export function useViewport(options: UseViewportOptions = {}) {
         y: viewport.y + screenY / viewport.scale,
       };
     },
-    [viewport]
+    [viewport],
   );
 
   // World to screen coordinate conversion
@@ -118,7 +115,7 @@ export function useViewport(options: UseViewportOptions = {}) {
         y: (worldY - viewport.y) * viewport.scale,
       };
     },
-    [viewport]
+    [viewport],
   );
 
   // Event handlers for pan/zoom
@@ -132,7 +129,7 @@ export function useViewport(options: UseViewportOptions = {}) {
           pan(e.deltaX, e.deltaY);
         }
       },
-      [pan, zoomAt]
+      [pan, zoomAt],
     ),
 
     onPointerDown: useCallback((e: React.PointerEvent) => {
@@ -153,7 +150,7 @@ export function useViewport(options: UseViewportOptions = {}) {
 
         pan(dx, dy);
       },
-      [pan]
+      [pan],
     ),
 
     onPointerUp: useCallback(() => {

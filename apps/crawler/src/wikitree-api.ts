@@ -43,7 +43,7 @@ export class WikiTreeApi {
 
   private async makeRequest<T>(
     action: string,
-    params: Record<string, string | number>
+    params: Record<string, string | number>,
   ): Promise<T | null> {
     // Rate limiting
     const now = Date.now();
@@ -56,9 +56,7 @@ export class WikiTreeApi {
       action,
       appId: APP_ID,
       format: "json",
-      ...Object.fromEntries(
-        Object.entries(params).map(([k, v]) => [k, String(v)])
-      ),
+      ...Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)])),
     });
 
     const url = `${API_ENDPOINT}?${queryParams.toString()}`;
@@ -123,10 +121,7 @@ export class WikiTreeApi {
     return null;
   }
 
-  async getAncestors(
-    wikiId: string,
-    depth = 3
-  ): Promise<WikiTreeProfile[]> {
+  async getAncestors(wikiId: string, depth = 3): Promise<WikiTreeProfile[]> {
     const fields = [
       "Id",
       "Name",
@@ -140,14 +135,11 @@ export class WikiTreeApi {
       "Mother",
     ].join(",");
 
-    const result = await this.makeRequest<WikiTreeApiResponse[]>(
-      "getAncestors",
-      {
-        key: wikiId,
-        depth,
-        fields,
-      }
-    );
+    const result = await this.makeRequest<WikiTreeApiResponse[]>("getAncestors", {
+      key: wikiId,
+      depth,
+      fields,
+    });
 
     if (result && result[0]?.ancestors) {
       return result[0].ancestors;
@@ -156,10 +148,7 @@ export class WikiTreeApi {
     return [];
   }
 
-  async getDescendants(
-    wikiId: string,
-    depth = 2
-  ): Promise<WikiTreeProfile[]> {
+  async getDescendants(wikiId: string, depth = 2): Promise<WikiTreeProfile[]> {
     const fields = [
       "Id",
       "Name",
@@ -174,14 +163,11 @@ export class WikiTreeApi {
       "Children",
     ].join(",");
 
-    const result = await this.makeRequest<WikiTreeApiResponse[]>(
-      "getDescendants",
-      {
-        key: wikiId,
-        depth,
-        fields,
-      }
-    );
+    const result = await this.makeRequest<WikiTreeApiResponse[]>("getDescendants", {
+      key: wikiId,
+      depth,
+      fields,
+    });
 
     if (result && result[0]?.descendants) {
       return result[0].descendants;

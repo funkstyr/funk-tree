@@ -21,9 +21,7 @@ export interface RawPerson {
 export function transformPerson(raw: RawPerson): Person {
   const name =
     raw.name ||
-    [raw.first_name, raw.middle_name, raw.last_name_birth]
-      .filter(Boolean)
-      .join(" ") ||
+    [raw.first_name, raw.middle_name, raw.last_name_birth].filter(Boolean).join(" ") ||
     raw.wiki_id;
 
   return {
@@ -41,10 +39,7 @@ export function transformPerson(raw: RawPerson): Person {
   };
 }
 
-export function buildTreeState(
-  rawPersons: RawPerson[],
-  rootId: string
-): TreeState {
+export function buildTreeState(rawPersons: RawPerson[], rootId: string): TreeState {
   const nodes = new Map<string, TreeNode>();
   const personMap = new Map<string, RawPerson>();
 

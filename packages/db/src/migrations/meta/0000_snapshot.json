@@ -110,12 +110,8 @@
           "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -202,12 +198,8 @@
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -217,9 +209,7 @@
         "session_token_unique": {
           "name": "session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -283,9 +273,7 @@
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -503,9 +491,7 @@
         "crawl_queue_wiki_id_unique": {
           "name": "crawl_queue_wiki_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "wiki_id"
-          ]
+          "columns": ["wiki_id"]
         }
       },
       "policies": {},
@@ -605,9 +591,7 @@
         "locations_raw_location_unique": {
           "name": "locations_raw_location_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "raw_location"
-          ]
+          "columns": ["raw_location"]
         }
       },
       "policies": {},
@@ -806,9 +790,7 @@
         "persons_wiki_id_unique": {
           "name": "persons_wiki_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "wiki_id"
-          ]
+          "columns": ["wiki_id"]
         }
       },
       "policies": {},
@@ -899,12 +881,8 @@
           "name": "relationships_person_id_persons_id_fk",
           "tableFrom": "relationships",
           "tableTo": "persons",
-          "columnsFrom": [
-            "person_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["person_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -912,12 +890,8 @@
           "name": "relationships_related_person_id_persons_id_fk",
           "tableFrom": "relationships",
           "tableTo": "persons",
-          "columnsFrom": [
-            "related_person_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["related_person_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -927,11 +901,7 @@
         "unique_relationship": {
           "name": "unique_relationship",
           "nullsNotDistinct": false,
-          "columns": [
-            "person_id",
-            "related_person_id",
-            "relationship_type"
-          ]
+          "columns": ["person_id", "related_person_id", "relationship_type"]
         }
       },
       "policies": {},

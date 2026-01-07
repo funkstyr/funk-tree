@@ -31,18 +31,13 @@ export function EdgeGraphics({ edges }: EdgeGraphicsProps) {
         }
       }
     },
-    [edges]
+    [edges],
   );
 
   return <pixiGraphics draw={drawEdges} />;
 }
 
-function drawBezierPath(
-  g: PixiGraphics,
-  points: Point[],
-  color: number,
-  width: number
-): void {
+function drawBezierPath(g: PixiGraphics, points: Point[], color: number, width: number): void {
   if (points.length < 2) return;
 
   g.moveTo(points[0].x, points[0].y);
@@ -52,14 +47,7 @@ function drawBezierPath(
     g.lineTo(points[1].x, points[1].y);
   } else if (points.length === 4) {
     // Use cubic bezier for smoother curves
-    g.bezierCurveTo(
-      points[1].x,
-      points[1].y,
-      points[2].x,
-      points[2].y,
-      points[3].x,
-      points[3].y
-    );
+    g.bezierCurveTo(points[1].x, points[1].y, points[2].x, points[2].y, points[3].x, points[3].y);
   } else {
     // Fallback: connect points with quadratic curves
     for (let i = 1; i < points.length - 1; i++) {
@@ -85,7 +73,7 @@ function drawDashedLine(
   color: number,
   width: number,
   dashLength = 6,
-  gapLength = 4
+  gapLength = 4,
 ): void {
   if (points.length < 2) return;
 

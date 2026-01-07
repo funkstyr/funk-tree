@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# Non-blocking pre-commit hook
+# Runs linting and formatting on staged files
+# Warnings are shown but commits always succeed
+
+echo "Running pre-commit checks (non-blocking)..."
+
+# Run lint-staged, but don't block on failures
+bunx lint-staged || {
+  echo ""
+  echo "Warning: Pre-commit checks found issues (commit proceeding anyway)"
+  echo "   Run 'bun run check' to see all issues"
+  echo ""
+}
+
+# Always exit 0 to allow commit
+exit 0

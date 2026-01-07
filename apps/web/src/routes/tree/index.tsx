@@ -19,7 +19,7 @@ function TreePage() {
   const { data, isLoading, error } = useQuery(
     orpc.genealogy.getDescendants.queryOptions({
       input: { wikiId: ROOT_WIKI_ID, depth: 4 },
-    })
+    }),
   );
 
   const handlePersonClick = (wikiId: string) => {
@@ -52,16 +52,10 @@ function TreePage() {
     <div className="flex h-full flex-col">
       <div className="border-b border-gray-800 px-6 py-4">
         <h1 className="text-2xl font-bold text-gray-100">Funk Family Tree</h1>
-        <p className="text-sm text-gray-400">
-          Starting from Heinrich Funck (c. 1690-1760)
-        </p>
+        <p className="text-sm text-gray-400">Starting from Heinrich Funck (c. 1690-1760)</p>
       </div>
       <div className="flex-1 overflow-hidden">
-        <FamilyTree
-          data={persons}
-          rootWikiId={ROOT_WIKI_ID}
-          onPersonClick={handlePersonClick}
-        />
+        <FamilyTree data={persons} rootWikiId={ROOT_WIKI_ID} onPersonClick={handlePersonClick} />
       </div>
     </div>
   );

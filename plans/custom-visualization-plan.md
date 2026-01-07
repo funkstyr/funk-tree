@@ -6,17 +6,18 @@ Building a future-proof, high-performance family tree visualization using **Pixi
 
 ## Why PixiJS v8?
 
-| Feature | Benefit |
-|---------|---------|
-| WebGPU support | Future-proof, best GPU performance |
-| WebGL fallback | Works on all browsers today |
-| Built-in culling | Automatic viewport optimization |
-| React 19 support | @pixi/react v8 declarative API |
-| TypeScript-first | Full type safety, rebuilt in TS |
-| Sprite batching | Up to 16 textures per batch |
-| Async initialization | Modern async/await patterns |
+| Feature              | Benefit                            |
+| -------------------- | ---------------------------------- |
+| WebGPU support       | Future-proof, best GPU performance |
+| WebGL fallback       | Works on all browsers today        |
+| Built-in culling     | Automatic viewport optimization    |
+| React 19 support     | @pixi/react v8 declarative API     |
+| TypeScript-first     | Full type safety, rebuilt in TS    |
+| Sprite batching      | Up to 16 textures per batch        |
+| Async initialization | Modern async/await patterns        |
 
 **Performance targets:**
+
 - 100,000+ nodes with culling
 - 60fps pan/zoom interactions
 - Sub-50ms initial render
@@ -1296,12 +1297,12 @@ The following optimizations are planned for when performance requirements increa
 
 Moving layout computation to a Web Worker prevents main thread blocking during expensive tree traversals. Key benefits:
 
-| Tree Size | Main Thread | Worker (Transferable) | UI Blocking |
-|-----------|-------------|----------------------|-------------|
-| 1,000 nodes | 5ms | 5.5ms | None |
-| 10,000 nodes | 70ms | 75ms | Noticeable |
-| 50,000 nodes | 450ms | 500ms | Severe |
-| 100,000 nodes | 1000ms | 1100ms | Unusable |
+| Tree Size     | Main Thread | Worker (Transferable) | UI Blocking |
+| ------------- | ----------- | --------------------- | ----------- |
+| 1,000 nodes   | 5ms         | 5.5ms                 | None        |
+| 10,000 nodes  | 70ms        | 75ms                  | Noticeable  |
+| 50,000 nodes  | 450ms       | 500ms                 | Severe      |
+| 100,000 nodes | 1000ms      | 1100ms                | Unusable    |
 
 While total time is similar, workers keep the UI responsive during computation.
 
@@ -1446,11 +1447,11 @@ useEffect(() => {
 
 #### Data Serialization Strategies
 
-| Method | Use Case | Performance |
-|--------|----------|-------------|
-| Structured Clone | <5k nodes | Automatic, simple |
-| Transferable Objects | >10k nodes | Zero-copy, fast |
-| SharedArrayBuffer | Concurrent access | Complex, rarely needed |
+| Method               | Use Case          | Performance            |
+| -------------------- | ----------------- | ---------------------- |
+| Structured Clone     | <5k nodes         | Automatic, simple      |
+| Transferable Objects | >10k nodes        | Zero-copy, fast        |
+| SharedArrayBuffer    | Concurrent access | Complex, rarely needed |
 
 **Transferable Objects Example:**
 
@@ -1654,11 +1655,11 @@ for (const node of nodes) {
 
 Regular Text re-renders canvas on every change. BitmapText uses pre-rendered font atlas:
 
-| Metric | Text | BitmapText | Improvement |
-|--------|------|------------|-------------|
-| Text change | ~5ms | ~0.05ms | 100x faster |
-| Memory per instance | High | Shared | 50% less |
-| Batching | Poor | Excellent | Better FPS |
+| Metric              | Text | BitmapText | Improvement |
+| ------------------- | ---- | ---------- | ----------- |
+| Text change         | ~5ms | ~0.05ms    | 100x faster |
+| Memory per instance | High | Shared     | 50% less    |
+| Batching            | Poor | Excellent  | Better FPS  |
 
 #### Implementation
 
@@ -1783,13 +1784,13 @@ export function NodeSprite({ node, scale, onSelect, onHover }) {
 
 #### Limitations to Consider
 
-| Feature | Regular Text | BitmapText |
-|---------|-------------|------------|
-| Drop shadows | ✓ | ✗ |
-| Gradients | ✓ | ✗ |
-| Word wrap | ✓ | Manual |
-| CJK characters | ✓ | Impractical |
-| Scaling quality | Excellent | Can pixelate |
+| Feature         | Regular Text | BitmapText   |
+| --------------- | ------------ | ------------ |
+| Drop shadows    | ✓            | ✗            |
+| Gradients       | ✓            | ✗            |
+| Word wrap       | ✓            | Manual       |
+| CJK characters  | ✓            | Impractical  |
+| Scaling quality | Excellent    | Can pixelate |
 
 **Workaround for Word Wrap:**
 
@@ -1808,12 +1809,12 @@ function wrapText(text: string, maxWidth: number, fontSize: number): string {
 
 ### Performance Impact Summary
 
-| Optimization | Impact | Complexity | Priority |
-|--------------|--------|------------|----------|
-| Web Workers | UI responsiveness for >10k nodes | Medium | High |
-| Texture Atlas | 3-4x render speed | Low | Medium |
-| BitmapText | 100x text update speed | Low | Medium |
-| ParticleContainer | 5x for 1M+ nodes | High | Low |
+| Optimization      | Impact                           | Complexity | Priority |
+| ----------------- | -------------------------------- | ---------- | -------- |
+| Web Workers       | UI responsiveness for >10k nodes | Medium     | High     |
+| Texture Atlas     | 3-4x render speed                | Low        | Medium   |
+| BitmapText        | 100x text update speed           | Low        | Medium   |
+| ParticleContainer | 5x for 1M+ nodes                 | High       | Low      |
 
 ### Implementation Order
 

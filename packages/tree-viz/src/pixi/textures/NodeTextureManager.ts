@@ -33,10 +33,7 @@ export class NodeTextureManager {
   private config: NodeTextureConfig;
   private colors: NodeTextureColors;
 
-  constructor(
-    config: NodeTextureConfig,
-    colors: NodeTextureColors = DEFAULT_COLORS
-  ) {
+  constructor(config: NodeTextureConfig, colors: NodeTextureColors = DEFAULT_COLORS) {
     this.config = config;
     this.colors = colors;
   }
@@ -51,20 +48,16 @@ export class NodeTextureManager {
     const resolution = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
 
     // Create base white texture for tinting approach
-    this.textures.set("base", this.createNodeTexture(
-      renderer,
-      width,
-      height,
-      cornerRadius,
-      0xffffff,
-      resolution
-    ));
+    this.textures.set(
+      "base",
+      this.createNodeTexture(renderer, width, height, cornerRadius, 0xffffff, resolution),
+    );
 
     // Create colored textures for each state
     for (const [key, color] of Object.entries(this.colors)) {
       this.textures.set(
         key as TextureKey,
-        this.createNodeTexture(renderer, width, height, cornerRadius, color, resolution)
+        this.createNodeTexture(renderer, width, height, cornerRadius, color, resolution),
       );
     }
 
@@ -77,11 +70,9 @@ export class NodeTextureManager {
     height: number,
     cornerRadius: number,
     color: number,
-    resolution: number
+    resolution: number,
   ): RenderTexture {
-    const graphics = new Graphics()
-      .roundRect(0, 0, width, height, cornerRadius)
-      .fill({ color });
+    const graphics = new Graphics().roundRect(0, 0, width, height, cornerRadius).fill({ color });
 
     const texture = RenderTexture.create({
       width,
@@ -106,8 +97,7 @@ export class NodeTextureManager {
       return this.textures.get("selected") || null;
     }
 
-    const key: TextureKey =
-      gender === "M" ? "male" : gender === "F" ? "female" : "unknown";
+    const key: TextureKey = gender === "M" ? "male" : gender === "F" ? "female" : "unknown";
     return this.textures.get(key) || null;
   }
 
@@ -155,7 +145,7 @@ let defaultManager: NodeTextureManager | null = null;
  * Get or create the default NodeTextureManager.
  */
 export function getNodeTextureManager(
-  config: NodeTextureConfig = { width: 180, height: 70, cornerRadius: 8 }
+  config: NodeTextureConfig = { width: 180, height: 70, cornerRadius: 8 },
 ): NodeTextureManager {
   if (!defaultManager) {
     defaultManager = new NodeTextureManager(config);

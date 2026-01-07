@@ -23,11 +23,14 @@
     "db:start": "docker compose up -d",
     "db:watch": "docker compose up",
     "db:stop": "docker compose stop",
-    "db:down": "docker compose down"
+    "db:down": "docker compose down",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@funk-tree/env": "workspace:*",
     "@electric-sql/pglite": "^0.2.17",
+    "@funk-tree/env": "workspace:*",
     "dotenv": "catalog:",
     "drizzle-orm": "^0.45.1",
     "pg": "^8.16.3",
@@ -36,7 +39,9 @@
   "devDependencies": {
     "@funk-tree/config": "workspace:*",
     "@types/pg": "^8.15.6",
+    "@vitest/coverage-v8": "catalog:",
     "drizzle-kit": "^0.31.8",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

@@ -3,10 +3,7 @@ import { type ReactNode, useEffect } from "react";
 
 // Import extend to register components
 import "../extend";
-import {
-  initializeBitmapFonts,
-  cleanupBitmapFonts,
-} from "../fonts/initFonts";
+import { initializeBitmapFonts, cleanupBitmapFonts } from "../fonts/initFonts";
 
 interface TreeStageProps {
   children: ReactNode;
@@ -15,12 +12,7 @@ interface TreeStageProps {
   backgroundColor?: number;
 }
 
-export function TreeStage({
-  children,
-  width,
-  height,
-  backgroundColor = 0x1a1a2e,
-}: TreeStageProps) {
+export function TreeStage({ children, width, height, backgroundColor = 0x1a1a2e }: TreeStageProps) {
   // Initialize bitmap fonts on mount
   useEffect(() => {
     initializeBitmapFonts();

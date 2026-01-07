@@ -1,16 +1,6 @@
-import type {
-  TreeState,
-  TreeNode,
-  TreeEdge,
-  Bounds,
-  LayoutConfig,
-  Point,
-} from "../data/types";
+import type { TreeState, TreeNode, TreeEdge, Bounds, LayoutConfig, Point } from "../data/types";
 
-export function computeLayout(
-  tree: TreeState,
-  config: LayoutConfig
-): TreeState {
+export function computeLayout(tree: TreeState, config: LayoutConfig): TreeState {
   const { nodes, rootId } = tree;
 
   if (nodes.size === 0) {
@@ -48,10 +38,7 @@ export function computeLayout(
   };
 }
 
-function assignGenerations(
-  nodes: Map<string, TreeNode>,
-  rootId: string
-): Map<string, number> {
+function assignGenerations(nodes: Map<string, TreeNode>, rootId: string): Map<string, number> {
   const generations = new Map<string, number>();
   const queue: [string, number][] = [[rootId, 0]];
   const visited = new Set<string>();
@@ -107,7 +94,7 @@ function assignGenerations(
 
 function groupByGeneration(
   nodes: Map<string, TreeNode>,
-  generations: Map<string, number>
+  generations: Map<string, number>,
 ): Map<number, string[]> {
   const groups = new Map<number, string[]>();
 
@@ -120,10 +107,7 @@ function groupByGeneration(
   return groups;
 }
 
-function sortFamiliesInGeneration(
-  nodeIds: string[],
-  nodes: Map<string, TreeNode>
-): void {
+function sortFamiliesInGeneration(nodeIds: string[], nodes: Map<string, TreeNode>): void {
   // Sort by: spouses together, then by number of children (families first)
   nodeIds.sort((a, b) => {
     const nodeA = nodes.get(a)!;
@@ -166,10 +150,7 @@ function sortFamiliesInGeneration(
   nodeIds.push(...grouped);
 }
 
-function positionNodes(
-  genGroups: Map<number, string[]>,
-  _config: LayoutConfig
-): void {
+function positionNodes(genGroups: Map<number, string[]>, _config: LayoutConfig): void {
   // Get nodes map from a sample
   const allNodeIds = Array.from(genGroups.values()).flat();
   if (allNodeIds.length === 0) return;
@@ -181,7 +162,7 @@ function positionNodes(
 function positionNodesWithMap(
   genGroups: Map<number, string[]>,
   nodes: Map<string, TreeNode>,
-  config: LayoutConfig
+  config: LayoutConfig,
 ): void {
   for (const [gen, nodeIds] of genGroups) {
     let x = 0;
@@ -207,7 +188,7 @@ function positionNodesWithMap(
 function centerChildrenUnderParents(
   genGroups: Map<number, string[]>,
   nodes: Map<string, TreeNode>,
-  config: LayoutConfig
+  config: LayoutConfig,
 ): void {
   // First pass: position all nodes
   positionNodesWithMap(genGroups, nodes, config);

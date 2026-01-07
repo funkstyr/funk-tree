@@ -15,7 +15,9 @@
       "@orpc/openapi": "^1.12.2",
       "@orpc/zod": "^1.12.2",
       "better-auth": "^1.4.9",
-      "@orpc/client": "^1.12.2"
+      "@orpc/client": "^1.12.2",
+      "vitest": "^4.0.15",
+      "@vitest/coverage-v8": "^4.0.15"
     }
   },
   "type": "module",
@@ -37,7 +39,11 @@
     "crawl": "turbo -F @funk-tree/crawler crawl",
     "crawl:migrate": "turbo -F @funk-tree/crawler migrate",
     "crawl:status": "turbo -F @funk-tree/crawler status",
-    "check": "oxlint && oxfmt --write"
+    "check": "oxlint && oxfmt --write",
+    "check:type-aware": "oxlint --tsconfig tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@funk-tree/env": "workspace:*",
@@ -47,10 +53,14 @@
   "devDependencies": {
     "@funk-tree/config": "workspace:*",
     "@types/bun": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3",
     "oxfmt": "^0.19.0",
     "oxlint": "^1.34.0",
     "turbo": "^2.6.3",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "packageManager": "bun@1.3.5"
 }

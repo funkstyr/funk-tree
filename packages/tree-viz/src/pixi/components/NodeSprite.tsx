@@ -25,12 +25,7 @@ function getDetailLevel(scale: number): DetailLevel {
   return "minimal";
 }
 
-export function NodeSprite({
-  node,
-  scale,
-  onSelect,
-  onHover,
-}: NodeSpriteProps) {
+export function NodeSprite({ node, scale, onSelect, onHover }: NodeSpriteProps) {
   const { x, y, width, height, person, selected, highlighted } = node;
   const lod = getDetailLevel(scale);
 
@@ -51,7 +46,7 @@ export function NodeSprite({
         g.stroke({ color: COLORS.highlighted, width: 3 });
       }
     },
-    [width, height, fillColor, highlighted]
+    [width, height, fillColor, highlighted],
   );
 
   const dates = useMemo(() => {

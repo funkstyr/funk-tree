@@ -33,14 +33,10 @@ interface PersonCardProps {
 export function PersonCard({ person, onClose, onNavigate }: PersonCardProps) {
   const displayName =
     person.name ||
-    [person.first_name, person.middle_name, person.last_name_birth]
-      .filter(Boolean)
-      .join(" ") ||
+    [person.first_name, person.middle_name, person.last_name_birth].filter(Boolean).join(" ") ||
     person.wiki_id;
 
-  const lifespan = [person.birth_date, person.death_date]
-    .filter(Boolean)
-    .join(" - ");
+  const lifespan = [person.birth_date, person.death_date].filter(Boolean).join(" - ");
 
   return (
     <Card className="w-80 bg-gray-900 border-gray-700">

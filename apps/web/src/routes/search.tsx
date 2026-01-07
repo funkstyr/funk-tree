@@ -41,12 +41,10 @@ function SearchPage() {
         limit,
         offset,
       },
-    })
+    }),
   );
 
-  const { data: stats } = useQuery(
-    orpc.genealogy.getStats.queryOptions({})
-  );
+  const { data: stats } = useQuery(orpc.genealogy.getStats.queryOptions({}));
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,9 +130,7 @@ function SearchPage() {
             <div className="flex h-full items-center justify-center">
               <div className="text-center">
                 <p className="text-gray-400">No results found</p>
-                <p className="text-sm text-gray-500">
-                  Try adjusting your search filters
-                </p>
+                <p className="text-sm text-gray-500">Try adjusting your search filters</p>
               </div>
             </div>
           ) : (
@@ -194,14 +190,10 @@ function SearchPage() {
 function PersonResult({ person }: { person: Person }) {
   const displayName =
     person.name ||
-    [person.first_name, person.middle_name, person.last_name_birth]
-      .filter(Boolean)
-      .join(" ") ||
+    [person.first_name, person.middle_name, person.last_name_birth].filter(Boolean).join(" ") ||
     person.wiki_id;
 
-  const lifespan = [person.birth_date, person.death_date]
-    .filter(Boolean)
-    .join(" - ");
+  const lifespan = [person.birth_date, person.death_date].filter(Boolean).join(" - ");
 
   return (
     <Link to="/tree/$wikiId" params={{ wikiId: person.wiki_id }}>
@@ -210,18 +202,12 @@ function PersonResult({ person }: { person: Person }) {
           <div className="flex items-start justify-between">
             <div>
               <h3 className="font-medium text-gray-100">{displayName}</h3>
-              {lifespan && (
-                <p className="text-sm text-gray-400">{lifespan}</p>
-              )}
+              {lifespan && <p className="text-sm text-gray-400">{lifespan}</p>}
               {person.birth_location && (
-                <p className="text-sm text-gray-500">
-                  Born: {person.birth_location}
-                </p>
+                <p className="text-sm text-gray-500">Born: {person.birth_location}</p>
               )}
               {person.death_location && (
-                <p className="text-sm text-gray-500">
-                  Died: {person.death_location}
-                </p>
+                <p className="text-sm text-gray-500">Died: {person.death_location}</p>
               )}
             </div>
             <div className="text-right">
@@ -239,9 +225,7 @@ function PersonResult({ person }: { person: Person }) {
                 </span>
               )}
               {person.generation !== null && person.generation !== undefined && (
-                <p className="mt-1 text-xs text-gray-500">
-                  Gen. {person.generation}
-                </p>
+                <p className="mt-1 text-xs text-gray-500">Gen. {person.generation}</p>
               )}
             </div>
           </div>

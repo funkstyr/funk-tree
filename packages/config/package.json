@@ -1,5 +1,13 @@
 {
   "name": "@funk-tree/config",
   "version": "0.0.0",
-  "private": true
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./vitest": "./vitest.base.ts"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
+  }
 }

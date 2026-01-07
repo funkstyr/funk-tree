@@ -9,11 +9,7 @@ import { publicProcedure } from "../index";
 export const getPerson = publicProcedure
   .input(z.object({ wikiId: z.string() }))
   .handler(async ({ input }) => {
-    const person = await db
-      .select()
-      .from(persons)
-      .where(eq(persons.wikiId, input.wikiId))
-      .limit(1);
+    const person = await db.select().from(persons).where(eq(persons.wikiId, input.wikiId)).limit(1);
 
     if (!person[0]) {
       return null;
@@ -22,18 +18,10 @@ export const getPerson = publicProcedure
     // Get parents
     const [father, mother] = await Promise.all([
       person[0].fatherWikiId
-        ? db
-            .select()
-            .from(persons)
-            .where(eq(persons.wikiId, person[0].fatherWikiId))
-            .limit(1)
+        ? db.select().from(persons).where(eq(persons.wikiId, person[0].fatherWikiId)).limit(1)
         : Promise.resolve([]),
       person[0].motherWikiId
-        ? db
-            .select()
-            .from(persons)
-            .where(eq(persons.wikiId, person[0].motherWikiId))
-            .limit(1)
+        ? db.select().from(persons).where(eq(persons.wikiId, person[0].motherWikiId)).limit(1)
         : Promise.resolve([]),
     ]);
 
@@ -41,33 +29,20 @@ export const getPerson = publicProcedure
     const children = await db
       .select()
       .from(persons)
-      .where(
-        or(
-          eq(persons.fatherWikiId, input.wikiId),
-          eq(persons.motherWikiId, input.wikiId)
-        )
-      );
+      .where(or(eq(persons.fatherWikiId, input.wikiId), eq(persons.motherWikiId, input.wikiId)));
 
     // Get spouses from relationships
     const spouseRels = await db
       .select()
       .from(relationships)
       .where(
-        and(
-          eq(relationships.personId, person[0].id),
-          eq(relationships.relationshipType, "spouse")
-        )
+        and(eq(relationships.personId, person[0].id), eq(relationships.relationshipType, "spouse")),
       );
 
     const spouseIds = spouseRels.map((r) => r.relatedPersonId);
     const spouses =
       spouseIds.length > 0
-        ? await db
-            .select()
-            .from(persons)
-            .where(
-              sql`${persons.id} IN ${spouseIds}`
-            )
+        ? await db.select().from(persons).where(sql`${persons.id} IN ${spouseIds}`)
         : [];
 
     return {
@@ -85,7 +60,7 @@ export const getDescendants = publicProcedure
     z.object({
       wikiId: z.string(),
       depth: z.number().min(1).max(10).default(3),
-    })
+    }),
   )
   .handler(async ({ input }) => {
     // Use recursive CTE to get descendants
@@ -126,7 +101,7 @@ export const getAncestors = publicProcedure
     z.object({
       wikiId: z.string(),
       depth: z.number().min(1).max(10).default(3),
-    })
+    }),
   )
   .handler(async ({ input }) => {
     const result = await db.execute(sql`
@@ -170,7 +145,7 @@ export const searchPersons = publicProcedure
       birthYearTo: z.number().optional(),
       limit: z.number().min(1).max(100).default(50),
       offset: z.number().min(0).default(0),
-    })
+    }),
   )
   .handler(async ({ input }) => {
     const conditions = [];
@@ -183,18 +158,15 @@ export const searchPersons = publicProcedure
           ilike(persons.firstName, searchTerm),
           ilike(persons.middleName, searchTerm),
           ilike(persons.lastNameBirth, searchTerm),
-          ilike(persons.lastNameCurrent, searchTerm)
-        )
+          ilike(persons.lastNameCurrent, searchTerm),
+        ),
       );
     }
 
     if (input.location) {
       const locationTerm = `%${input.location}%`;
       conditions.push(
-        or(
-          ilike(persons.birthLocation, locationTerm),
-          ilike(persons.deathLocation, locationTerm)
-        )
+        or(ilike(persons.birthLocation, locationTerm), ilike(persons.deathLocation, locationTerm)),
       );
     }
 
@@ -205,15 +177,10 @@ export const searchPersons = publicProcedure
       query = query.where(and(...conditions)) as typeof query;
     }
 
-    const results = await query
-      .limit(input.limit)
-      .offset(input.offset)
-      .orderBy(persons.name);
+    const results = await query.limit(input.limit).offset(input.offset).orderBy(persons.name);
 
     // Get total count for pagination
-    let countQuery = db
-      .select({ count: sql<number>`count(*)` })
-      .from(persons);
+    let countQuery = db.select({ count: sql<number>`count(*)` }).from(persons);
 
     if (conditions.length > 0) {
       countQuery = countQuery.where(and(...conditions)) as typeof countQuery;

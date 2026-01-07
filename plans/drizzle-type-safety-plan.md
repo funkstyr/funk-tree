@@ -15,24 +15,24 @@ This plan audits all `sql` template literal usage in the crawler app and provide
 
 ### crawler.ts
 
-| Line | Current Code | Purpose |
-|------|--------------|---------|
-| 96 | `updatedAt: sql\`NOW()\`` | Set timestamp on upsert |
-| 143 | `orderBy(sql\`${crawlQueue.priority} DESC, ${crawlQueue.createdAt} ASC\`)` | Multi-column ordering |
-| 158 | `processedAt: sql\`NOW()\`` | Set timestamp on update |
-| 161 | `retryCount: sql\`${crawlQueue.retryCount} + 1\`` | Increment counter |
-| 173 | `sql<number>\`count(*)\`` | Count persons |
-| 177 | `sql<number>\`count(*)\`` | Count pending queue |
-| 181 | `sql<number>\`count(*)\`` | Count completed queue |
-| 186 | `sql<number>\`count(*)\`` | Count errors |
+| Line | Current Code                                                               | Purpose                 |
+| ---- | -------------------------------------------------------------------------- | ----------------------- |
+| 96   | `updatedAt: sql\`NOW()\``                                                  | Set timestamp on upsert |
+| 143  | `orderBy(sql\`${crawlQueue.priority} DESC, ${crawlQueue.createdAt} ASC\`)` | Multi-column ordering   |
+| 158  | `processedAt: sql\`NOW()\``                                                | Set timestamp on update |
+| 161  | `retryCount: sql\`${crawlQueue.retryCount} + 1\``                          | Increment counter       |
+| 173  | `sql<number>\`count(\*)\``                                                 | Count persons           |
+| 177  | `sql<number>\`count(\*)\``                                                 | Count pending queue     |
+| 181  | `sql<number>\`count(\*)\``                                                 | Count completed queue   |
+| 186  | `sql<number>\`count(\*)\``                                                 | Count errors            |
 
 ### migrate.ts
 
-| Lines | Current Code | Purpose |
-|-------|--------------|---------|
-| 78-121 | `db.execute(sql\`INSERT INTO persons...ON CONFLICT DO UPDATE\`)` | Upsert person from legacy data |
-| 145-149 | `db.execute(sql\`INSERT INTO crawl_queue...ON CONFLICT DO NOTHING\`)` | Insert pending queue item |
-| 161-167 | `db.execute(sql\`INSERT INTO crawl_queue...ON CONFLICT DO UPDATE\`)` | Upsert completed queue item |
+| Lines   | Current Code                                                          | Purpose                        |
+| ------- | --------------------------------------------------------------------- | ------------------------------ |
+| 78-121  | `db.execute(sql\`INSERT INTO persons...ON CONFLICT DO UPDATE\`)`      | Upsert person from legacy data |
+| 145-149 | `db.execute(sql\`INSERT INTO crawl_queue...ON CONFLICT DO NOTHING\`)` | Insert pending queue item      |
+| 161-167 | `db.execute(sql\`INSERT INTO crawl_queue...ON CONFLICT DO UPDATE\`)`  | Upsert completed queue item    |
 
 ---
 
@@ -41,11 +41,13 @@ This plan audits all `sql` template literal usage in the crawler app and provide
 ### 1. Timestamps (`NOW()`)
 
 **Current:**
+
 ```typescript
 updatedAt: sql`NOW()`
 ```
 
 **Type-safe alternative:**
+
 ```typescript
 import { sql } from 'drizzle-orm';
 
@@ -64,11 +66,13 @@ updatedAt: sql`now()`
 ### 2. Multi-Column Ordering
 
 **Current:**
+
 ```typescript
 .orderBy(sql`${crawlQueue.priority} DESC, ${crawlQueue.createdAt} ASC`)
 ```
 
 **Type-safe alternative:**
+
 ```typescript
 import { desc, asc } from 'drizzle-orm';
 
@@ -80,11 +84,13 @@ import { desc, asc } from 'drizzle-orm';
 ### 3. Incrementing a Column
 
 **Current:**
+
 ```typescript
 retryCount: sql`${crawlQueue.retryCount} + 1`
 ```
 
 **Type-safe alternative:**
+
 ```typescript
 import { sql } from 'drizzle-orm';
 
@@ -99,6 +105,7 @@ retryCount: sql`${crawlQueue.retryCount} + 1`
 ### 4. Count Aggregation
 
 **Current:**
+
 ```typescript
 const [personsCount] = await this.db
   .select({ count: sql<number>`count(*)` })
@@ -106,6 +113,7 @@ const [personsCount] = await this.db
 ```
 
 **Type-safe alternative:**
+
 ```typescript
 import { count } from 'drizzle-orm';
 
@@ -119,6 +127,7 @@ const [personsCount] = await this.db
 ### 5. Raw INSERT with ON CONFLICT (migrate.ts)
 
 **Current (persons upsert):**
+
 ```typescript
 await db.execute(sql`
   INSERT INTO persons (wiki_id, wiki_numeric_id, name, ...)
@@ -128,6 +137,7 @@ await db.execute(sql`
 ```
 
 **Type-safe alternative:**
+
 ```typescript
 import { persons, type NewPerson } from '@funk-tree/db/schema';
 
@@ -164,6 +174,7 @@ await db
 ```
 
 **Current (queue insert with DO NOTHING):**
+
 ```typescript
 await db.execute(sql`
   INSERT INTO crawl_queue (wiki_id, status)
@@ -173,6 +184,7 @@ await db.execute(sql`
 ```
 
 **Type-safe alternative:**
+
 ```typescript
 import { crawlQueue } from '@funk-tree/db/schema';
 
@@ -183,6 +195,7 @@ await db
 ```
 
 **Current (queue upsert for completed):**
+
 ```typescript
 await db.execute(sql`
   INSERT INTO crawl_queue (wiki_id, status, processed_at)
@@ -194,6 +207,7 @@ await db.execute(sql`
 ```
 
 **Type-safe alternative:**
+
 ```typescript
 await db
   .insert(crawlQueue)
@@ -219,11 +233,11 @@ await db
 
 - [ ] Import `count`, `desc`, `asc` from `drizzle-orm`
 - [ ] Remove `sql` import (or keep if needed for increment)
-- [ ] Line 96: Change `sql\`NOW()\`` to `new Date()`
+- [ ] Line 96: Change `sql\`NOW()\``to`new Date()`
 - [ ] Line 143: Change to `orderBy(desc(crawlQueue.priority), asc(crawlQueue.createdAt))`
-- [ ] Line 158: Change `sql\`NOW()\`` to `new Date()`
+- [ ] Line 158: Change `sql\`NOW()\``to`new Date()`
 - [ ] Line 161: Keep as-is (already type-safe) or extract to helper
-- [ ] Lines 173, 177, 181, 186: Change `sql<number>\`count(*)\`` to `count()`
+- [ ] Lines 173, 177, 181, 186: Change `sql<number>\`count(\*)\``to`count()`
 
 ### migrate.ts
 
@@ -294,12 +308,12 @@ for (let i = 0; i < entries.length; i += BATCH_SIZE) {
 
 ## Summary
 
-| Change | Files | Complexity |
-|--------|-------|------------|
-| `NOW()` → `new Date()` | crawler.ts | Low |
-| Raw orderBy → `desc()`/`asc()` | crawler.ts | Low |
-| `sql\`count(*)\`` → `count()` | crawler.ts | Low |
-| Raw INSERT → Drizzle insert | migrate.ts | Medium |
-| Add batch inserts | migrate.ts | Optional |
+| Change                         | Files      | Complexity |
+| ------------------------------ | ---------- | ---------- |
+| `NOW()` → `new Date()`         | crawler.ts | Low        |
+| Raw orderBy → `desc()`/`asc()` | crawler.ts | Low        |
+| `sql\`count(\*)\``→`count()`   | crawler.ts | Low        |
+| Raw INSERT → Drizzle insert    | migrate.ts | Medium     |
+| Add batch inserts              | migrate.ts | Optional   |
 
 **Estimated effort:** 30-45 minutes for core changes, additional time for optional improvements.

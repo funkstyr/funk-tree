@@ -11,11 +11,7 @@ interface UseLayoutWorkerOptions {
 
 interface UseLayoutWorkerResult {
   /** Compute layout in the worker */
-  computeLayout: (
-    persons: RawPerson[],
-    rootId: string,
-    config: LayoutConfig
-  ) => Promise<TreeState>;
+  computeLayout: (persons: RawPerson[], rootId: string, config: LayoutConfig) => Promise<TreeState>;
   /** Whether the worker is ready */
   isReady: boolean;
   /** Whether a computation is in progress */
@@ -30,17 +26,20 @@ interface UseLayoutWorkerResult {
  * Hook to compute tree layout in a Web Worker.
  * Falls back to main thread computation if workers are not supported.
  */
-export function useLayoutWorker(
-  options: UseLayoutWorkerOptions = {}
-): UseLayoutWorkerResult {
+export function useLayoutWorker(options: UseLayoutWorkerOptions = {}): UseLayoutWorkerResult {
   const { timeout = 30000, enabled = true } = options;
 
   const workerRef = useRef<Worker | null>(null);
-  const pendingRef = useRef<Map<string, {
-    resolve: (result: TreeState) => void;
-    reject: (error: Error) => void;
-    timeoutId: ReturnType<typeof setTimeout>;
-  }>>(new Map());
+  const pendingRef = useRef<
+    Map<
+      string,
+      {
+        resolve: (result: TreeState) => void;
+        reject: (error: Error) => void;
+        timeoutId: ReturnType<typeof setTimeout>;
+      }
+    >
+  >(new Map());
 
   const [isReady, setIsReady] = useState(false);
   const [isComputing, setIsComputing] = useState(false);
@@ -62,10 +61,9 @@ export function useLayoutWorker(
 
     try {
       // Create worker using Vite's URL pattern
-      workerRef.current = new Worker(
-        new URL("../core/layout/layout.worker.ts", import.meta.url),
-        { type: "module" }
-      );
+      workerRef.current = new Worker(new URL("../core/layout/layout.worker.ts", import.meta.url), {
+        type: "module",
+      });
 
       // Handle messages from worker
       workerRef.current.onmessage = (event) => {
@@ -136,11 +134,7 @@ export function useLayoutWorker(
 
   // Compute layout function
   const computeLayout = useCallback(
-    (
-      persons: RawPerson[],
-      rootId: string,
-      config: LayoutConfig
-    ): Promise<TreeState> => {
+    (persons: RawPerson[], rootId: string, config: LayoutConfig): Promise<TreeState> => {
       return new Promise((resolve, reject) => {
         if (!workerRef.current || !isReady) {
           reject(new Error("Worker not ready"));
@@ -176,7 +170,7 @@ export function useLayoutWorker(
         });
       });
     },
-    [isReady, timeout]
+    [isReady, timeout],
   );
 
   // Cancel function
