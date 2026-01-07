@@ -63,7 +63,6 @@ function drawBezierPath(
   } else {
     // Fallback: connect points with quadratic curves
     for (let i = 1; i < points.length - 1; i++) {
-      const p0 = points[i - 1];
       const p1 = points[i];
       const p2 = points[i + 1];
 

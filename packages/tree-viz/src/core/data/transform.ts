@@ -1,11 +1,4 @@
-import type {
-  Person,
-  Relationship,
-  TreeNode,
-  TreeState,
-  LayoutConfig,
-  DEFAULT_LAYOUT_CONFIG,
-} from "./types";
+import type { Person, TreeNode, TreeState } from "./types";
 
 export interface RawPerson {
   id?: number;

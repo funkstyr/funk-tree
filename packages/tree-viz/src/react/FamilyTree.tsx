@@ -7,13 +7,7 @@ import { useViewport } from "../pixi/hooks/useViewport";
 import { computeLayout } from "../core/layout/generation-layout";
 import { buildTreeState, type RawPerson } from "../core/data/transform";
 import { SpatialIndex } from "../core/spatial/rtree";
-import type {
-  Person,
-  TreeState,
-  TreeNode,
-  TreeEdge,
-  DEFAULT_LAYOUT_CONFIG,
-} from "../core/data/types";
+import type { Person, TreeState, TreeNode } from "../core/data/types";
 
 export interface FamilyTreeProps {
   persons: RawPerson[];
@@ -58,7 +52,6 @@ export function FamilyTree({
     handlers,
     getVisibleBounds,
     fitToBounds,
-    screenToWorld,
   } = useViewport({
     minScale: 0.05,
     maxScale: 2,

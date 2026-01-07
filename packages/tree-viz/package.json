@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "@funk-tree/config": "workspace:*",
+    "@types/rbush": "^4.0.0",
     "@types/react": "^19.0.0",
     "typescript": "catalog:"
   }

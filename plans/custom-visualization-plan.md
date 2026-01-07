@@ -1176,42 +1176,111 @@ BitmapFont.from('NodeFont', {
 
 ## Implementation Steps
 
-1. **Create package scaffold**
+1. ✅ **Create package scaffold**
    - Set up `packages/tree-viz` with TypeScript + PixiJS v8
    - Configure @pixi/react with extend API
 
-2. **Implement data layer**
+2. ✅ **Implement data layer**
    - TreeNode, TreeEdge, TreeState types
    - Transform functions from DB schema
 
-3. **Build layout engine**
+3. ✅ **Build layout engine**
    - Generation assignment algorithm
    - Position computation
    - Edge routing
 
-4. **Create PixiJS components**
+4. ✅ **Create PixiJS components**
    - TreeStage with async init
    - NodeSprite with LOD
    - EdgeGraphics
 
-5. **Implement viewport system**
+5. ✅ **Implement viewport system**
    - Pan/zoom hooks
    - Coordinate transforms
-   - Culling integration
+   - Culling integration (R-Tree)
 
-6. **Add interactivity**
+6. ✅ **Add interactivity**
    - Node selection/hover
    - R-Tree hit testing
    - Event handlers
 
-7. **Optimize performance**
+7. **Optimize performance** (future)
    - Web Worker layout
    - Texture atlas
    - BitmapText
 
-8. **Integrate with app**
+8. 🔄 **Integrate with app**
    - Replace react-d3-tree
    - Connect to ORPC data
+
+---
+
+## Web App Integration
+
+### Files to Modify
+
+1. `apps/web/package.json` - Add tree-viz dependency
+2. `apps/web/src/components/family-tree.tsx` - Replace react-d3-tree with tree-viz
+3. Keep `apps/web/src/components/person-card.tsx` - Reuse for selection panel
+
+### Data Mapping
+
+The web app receives Person data with snake_case fields from the DB:
+
+```typescript
+// apps/web Person type (snake_case from DB)
+interface Person {
+  wiki_id: string;
+  name?: string | null;
+  first_name?: string | null;
+  gender?: string | null;
+  birth_date?: string | null;
+  death_date?: string | null;
+  birth_location?: string | null;
+  father_wiki_id?: string | null;
+  mother_wiki_id?: string | null;
+  // ...
+}
+
+// tree-viz RawPerson type (camelCase)
+interface RawPerson {
+  id: string;
+  wikiId: string;
+  name: string;
+  gender: 'M' | 'F' | 'U';
+  birthDate?: string;
+  deathDate?: string;
+  birthLocation?: string;
+  fatherWikiId?: string;
+  motherWikiId?: string;
+  spouseWikiIds?: string[];
+}
+```
+
+### Transform Function
+
+```typescript
+function mapDbPersonToRawPerson(dbPerson: Person): RawPerson {
+  const displayName =
+    dbPerson.name ||
+    [dbPerson.first_name, dbPerson.middle_name, dbPerson.last_name_birth]
+      .filter(Boolean)
+      .join(" ") ||
+    dbPerson.wiki_id;
+
+  return {
+    id: dbPerson.wiki_id,
+    wikiId: dbPerson.wiki_id,
+    name: displayName,
+    gender: dbPerson.gender === "Male" ? "M" : dbPerson.gender === "Female" ? "F" : "U",
+    birthDate: dbPerson.birth_date || undefined,
+    deathDate: dbPerson.death_date || undefined,
+    birthLocation: dbPerson.birth_location || undefined,
+    fatherWikiId: dbPerson.father_wiki_id || undefined,
+    motherWikiId: dbPerson.mother_wiki_id || undefined,
+  };
+}
+```
 
 ---
 

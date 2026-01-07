@@ -168,7 +168,7 @@ function sortFamiliesInGeneration(
 
 function positionNodes(
   genGroups: Map<number, string[]>,
-  config: LayoutConfig
+  _config: LayoutConfig
 ): void {
   // Get nodes map from a sample
   const allNodeIds = Array.from(genGroups.values()).flat();
@@ -212,48 +212,9 @@ function centerChildrenUnderParents(
   // First pass: position all nodes
   positionNodesWithMap(genGroups, nodes, config);
 
-  // Second pass: center children under their parents
-  const sortedGens = Array.from(genGroups.keys()).sort((a, b) => a - b);
-
-  for (const gen of sortedGens) {
-    const nodeIds = genGroups.get(gen)!;
-
-    for (const nodeId of nodeIds) {
-      const node = nodes.get(nodeId);
-      if (!node || node.childIds.length === 0) continue;
-
-      // Get children
-      const children = node.childIds
-        .map((id) => nodes.get(id))
-        .filter((n): n is TreeNode => n !== undefined);
-
-      if (children.length === 0) continue;
-
-      // Calculate center of children
-      const childMinX = Math.min(...children.map((c) => c.x));
-      const childMaxX = Math.max(...children.map((c) => c.x + c.width));
-      const childCenterX = (childMinX + childMaxX) / 2;
-
-      // Calculate center of parent (and spouse if exists)
-      const spouses = node.spouseIds
-        .map((id) => nodes.get(id))
-        .filter((n): n is TreeNode => n !== undefined);
-
-      const parentMinX = Math.min(node.x, ...spouses.map((s) => s.x));
-      const parentMaxX = Math.max(
-        node.x + node.width,
-        ...spouses.map((s) => s.x + s.width)
-      );
-      const parentCenterX = (parentMinX + parentMaxX) / 2;
-
-      // Calculate offset needed
-      const offset = childCenterX - parentCenterX;
-
-      // Move parent (and spouses) to center above children
-      // Only if it doesn't cause overlap with siblings
-      // For simplicity, we'll just note this could be enhanced
-    }
-  }
+  // TODO: Second pass - center parents above their children
+  // This would involve calculating child bounds, parent bounds,
+  // and shifting while avoiding overlaps with siblings
 }
 
 function computeEdges(nodes: Map<string, TreeNode>): Map<string, TreeEdge> {
