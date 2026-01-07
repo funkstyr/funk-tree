@@ -1284,6 +1284,547 @@ function mapDbPersonToRawPerson(dbPerson: Person): RawPerson {
 
 ---
 
+## Future Optimizations (Detailed Plans)
+
+The following optimizations are planned for when performance requirements increase (>10k nodes).
+
+---
+
+### 1. Web Worker Layout Computation
+
+#### Why Use Web Workers?
+
+Moving layout computation to a Web Worker prevents main thread blocking during expensive tree traversals. Key benefits:
+
+| Tree Size | Main Thread | Worker (Transferable) | UI Blocking |
+|-----------|-------------|----------------------|-------------|
+| 1,000 nodes | 5ms | 5.5ms | None |
+| 10,000 nodes | 70ms | 75ms | Noticeable |
+| 50,000 nodes | 450ms | 500ms | Severe |
+| 100,000 nodes | 1000ms | 1100ms | Unusable |
+
+While total time is similar, workers keep the UI responsive during computation.
+
+#### Implementation
+
+**Worker File:**
+
+```typescript
+// packages/tree-viz/src/core/layout/layout.worker.ts
+import { computeLayout } from './generation-layout';
+import { buildTreeState } from '../data/transform';
+import type { TreeState, LayoutConfig } from '../data/types';
+
+interface WorkerMessage {
+  id: string;
+  type: 'layout' | 'abort';
+  treeState?: TreeState;
+  config?: LayoutConfig;
+}
+
+self.onmessage = (event: MessageEvent<WorkerMessage>) => {
+  const { id, type, treeState, config } = event.data;
+
+  try {
+    if (type === 'layout' && treeState && config) {
+      const result = computeLayout(treeState, config);
+      self.postMessage({ id, result });
+    }
+  } catch (error) {
+    self.postMessage({
+      id,
+      error: {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      }
+    });
+  }
+};
+
+export {};
+```
+
+**React Hook:**
+
+```typescript
+// packages/tree-viz/src/hooks/useLayoutWorker.ts
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { TreeState, LayoutConfig, LayoutResult } from '../core/data/types';
+
+export function useLayoutWorker(options: { timeout?: number } = {}) {
+  const { timeout = 10000 } = options;
+  const workerRef = useRef<Worker | null>(null);
+  const [isReady, setIsReady] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    try {
+      workerRef.current = new Worker(
+        new URL('../core/layout/layout.worker.ts', import.meta.url),
+        { type: 'module' }
+      );
+
+      workerRef.current.onerror = (event) => {
+        setError(new Error(event.message));
+      };
+
+      setIsReady(true);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to create worker'));
+    }
+
+    return () => {
+      workerRef.current?.terminate();
+      workerRef.current = null;
+    };
+  }, []);
+
+  const computeLayout = useCallback(
+    (treeState: TreeState, config: LayoutConfig): Promise<LayoutResult> => {
+      if (!workerRef.current || !isReady) {
+        return Promise.reject(new Error('Worker not initialized'));
+      }
+
+      return new Promise((resolve, reject) => {
+        const messageId = crypto.randomUUID();
+        let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
+
+        const handler = (event: MessageEvent) => {
+          if (event.data.id !== messageId) return;
+
+          if (timeoutHandle) clearTimeout(timeoutHandle);
+          workerRef.current?.removeEventListener('message', handler);
+
+          if (event.data.error) {
+            reject(new Error(event.data.error.message));
+          } else {
+            resolve(event.data.result);
+          }
+        };
+
+        timeoutHandle = setTimeout(() => {
+          workerRef.current?.removeEventListener('message', handler);
+          reject(new Error(`Layout timeout (${timeout}ms)`));
+        }, timeout);
+
+        workerRef.current!.addEventListener('message', handler);
+        workerRef.current!.postMessage({
+          id: messageId,
+          type: 'layout',
+          treeState,
+          config
+        });
+      });
+    },
+    [isReady, timeout]
+  );
+
+  return { computeLayout, isReady, error };
+}
+```
+
+**Usage with Fallback:**
+
+```typescript
+// In FamilyTree.tsx
+const { computeLayout: computeInWorker, isReady } = useLayoutWorker();
+
+useEffect(() => {
+  if (!isReady) return;
+
+  const treeState = buildTreeState(persons, rootId);
+
+  computeInWorker(treeState, LAYOUT_CONFIG)
+    .then(setTreeState)
+    .catch((error) => {
+      console.warn('Worker failed, falling back:', error);
+      // Fallback to main thread
+      setTreeState(computeLayout(treeState, LAYOUT_CONFIG));
+    });
+}, [persons, rootId, isReady]);
+```
+
+#### Data Serialization Strategies
+
+| Method | Use Case | Performance |
+|--------|----------|-------------|
+| Structured Clone | <5k nodes | Automatic, simple |
+| Transferable Objects | >10k nodes | Zero-copy, fast |
+| SharedArrayBuffer | Concurrent access | Complex, rarely needed |
+
+**Transferable Objects Example:**
+
+```typescript
+// Convert tree data to transferable format
+function serializeTreeData(treeState: TreeState) {
+  const nodeX = new Float32Array(treeState.nodes.size);
+  const nodeY = new Float32Array(treeState.nodes.size);
+  // ... fill arrays
+
+  return {
+    metadata: { nodeIds: [...treeState.nodes.keys()] },
+    buffers: [nodeX.buffer, nodeY.buffer]
+  };
+}
+
+// Send with transfer list
+const { metadata, buffers } = serializeTreeData(treeState);
+worker.postMessage({ metadata }, buffers);
+```
+
+#### Alternative: Comlink (Cleaner API)
+
+```typescript
+// Using Comlink for RPC-style communication
+import * as Comlink from 'comlink';
+
+// Worker
+class LayoutComputer {
+  compute(treeState: TreeState, config: LayoutConfig) {
+    return computeLayout(treeState, config);
+  }
+}
+Comlink.expose(LayoutComputer);
+
+// Main thread
+const Computer = Comlink.wrap<typeof LayoutComputer>(worker);
+const result = await new Computer().compute(treeState, config);
+```
+
+---
+
+### 2. Texture Atlas for Node Backgrounds
+
+#### Why Texture Atlases?
+
+Pre-rendering node backgrounds to textures provides 3-4x performance boost:
+
+- Single draw call for all nodes with same texture
+- GPU batching with up to 16 textures per batch
+- No runtime Graphics recreation
+
+#### Implementation
+
+**Pre-render Node Textures:**
+
+```typescript
+// packages/tree-viz/src/pixi/textures/NodeTextures.ts
+import { Graphics, RenderTexture, Application } from 'pixi.js';
+
+interface NodeTextureConfig {
+  width: number;
+  height: number;
+  cornerRadius: number;
+  colors: {
+    male: number;
+    female: number;
+    unknown: number;
+    selected: number;
+    highlighted: number;
+  };
+}
+
+export class NodeTextureManager {
+  private textures = new Map<string, RenderTexture>();
+
+  constructor(
+    private app: Application,
+    private config: NodeTextureConfig
+  ) {}
+
+  async initialize() {
+    const { width, height, cornerRadius, colors } = this.config;
+
+    // Pre-render each node type
+    for (const [key, color] of Object.entries(colors)) {
+      const graphics = new Graphics()
+        .roundRect(0, 0, width, height, cornerRadius)
+        .fill({ color });
+
+      const texture = RenderTexture.create({
+        width,
+        height,
+        antialias: true,
+        resolution: window.devicePixelRatio || 1,
+      });
+
+      this.app.renderer.render(graphics, { target: texture });
+      this.textures.set(key, texture);
+
+      graphics.destroy();
+    }
+  }
+
+  getTexture(gender: 'M' | 'F' | 'U', selected: boolean): RenderTexture {
+    if (selected) return this.textures.get('selected')!;
+
+    const key = gender === 'M' ? 'male' : gender === 'F' ? 'female' : 'unknown';
+    return this.textures.get(key)!;
+  }
+
+  destroy() {
+    for (const texture of this.textures.values()) {
+      texture.destroy(true);
+    }
+    this.textures.clear();
+  }
+}
+```
+
+**Updated NodeSprite:**
+
+```typescript
+// Using Sprite instead of Graphics for better batching
+import { Sprite } from 'pixi.js';
+
+export function NodeSprite({ node, textureManager, scale, onSelect, onHover }) {
+  const { person, selected } = node;
+
+  // Get pre-rendered texture based on state
+  const texture = textureManager.getTexture(person.gender, selected);
+
+  return (
+    <pixiSprite
+      texture={texture}
+      x={node.x}
+      y={node.y}
+      eventMode="static"
+      cursor="pointer"
+      cullable={true}
+      onPointerDown={() => onSelect?.(node.id)}
+      onPointerEnter={() => onHover?.(node.id)}
+      onPointerLeave={() => onHover?.(null)}
+    >
+      {/* Text children remain the same */}
+    </pixiSprite>
+  );
+}
+```
+
+#### Tinting for Color Variants
+
+For even better batching, use a single white texture and tint at runtime:
+
+```typescript
+// Single base texture with runtime tinting
+const baseTexture = createWhiteNodeTexture();
+
+// Apply tint based on gender
+<pixiSprite
+  texture={baseTexture}
+  tint={person.gender === 'M' ? 0x3b82f6 : person.gender === 'F' ? 0xec4899 : 0x6b7280}
+/>
+```
+
+#### ParticleContainer for Extreme Scale (1M+ nodes)
+
+For massive trees, PixiJS v8's ParticleContainer is 5x faster:
+
+```typescript
+import { ParticleContainer, Particle } from 'pixi.js';
+
+const container = new ParticleContainer({
+  dynamicProperties: {
+    position: true,
+    rotation: false,
+    color: false,
+    scale: false,
+  },
+});
+
+// Add particles for each node
+for (const node of nodes) {
+  const particle = new Particle({
+    texture: nodeTexture,
+    x: node.x,
+    y: node.y,
+    color: getColorForNode(node),
+  });
+  container.addParticle(particle);
+}
+```
+
+**Tradeoff:** Particles can't have children, filters, or masks - use only for extreme scale requirements.
+
+---
+
+### 3. BitmapText for Text Rendering
+
+#### Why BitmapText?
+
+Regular Text re-renders canvas on every change. BitmapText uses pre-rendered font atlas:
+
+| Metric | Text | BitmapText | Improvement |
+|--------|------|------------|-------------|
+| Text change | ~5ms | ~0.05ms | 100x faster |
+| Memory per instance | High | Shared | 50% less |
+| Batching | Poor | Excellent | Better FPS |
+
+#### Implementation
+
+**Initialize Bitmap Fonts:**
+
+```typescript
+// packages/tree-viz/src/pixi/fonts/initFonts.ts
+import { BitmapFont } from 'pixi.js';
+
+export function initializeBitmapFonts() {
+  // Name font (shown at medium and full LOD)
+  BitmapFont.install({
+    name: 'personName',
+    style: {
+      fontFamily: 'Inter, system-ui, sans-serif',
+      fontSize: 13,
+      fontWeight: '600',
+      fill: 0xffffff,
+    },
+    chars: [
+      ['a', 'z'], ['A', 'Z'], ['0', '9'],
+      ' ', '-', '.', ',', "'", '(', ')'
+    ],
+    resolution: 2,
+    padding: 4,
+  });
+
+  // Date font (full LOD only)
+  BitmapFont.install({
+    name: 'personDates',
+    style: {
+      fontFamily: 'Inter, system-ui, sans-serif',
+      fontSize: 10,
+      fill: 0xcccccc,
+    },
+    chars: [['0', '9'], ' ', '-', 'c', '.'],
+    resolution: 2,
+  });
+
+  // Location font (full LOD only)
+  BitmapFont.install({
+    name: 'personLocation',
+    style: {
+      fontFamily: 'Inter, system-ui, sans-serif',
+      fontSize: 9,
+      fill: 0x999999,
+    },
+    chars: [
+      ['a', 'z'], ['A', 'Z'], ['0', '9'],
+      ' ', ',', '.', '-', "'", '(', ')'
+    ],
+    resolution: 2,
+  });
+}
+
+export function cleanupBitmapFonts() {
+  BitmapFont.uninstall('personName');
+  BitmapFont.uninstall('personDates');
+  BitmapFont.uninstall('personLocation');
+}
+```
+
+**Updated NodeSprite with BitmapText:**
+
+```typescript
+// packages/tree-viz/src/pixi/components/NodeSprite.tsx
+import { BitmapText } from 'pixi.js';
+
+export function NodeSprite({ node, scale, onSelect, onHover }) {
+  const { x, y, width, height, person, selected, highlighted } = node;
+  const lod = getDetailLevel(scale);
+
+  return (
+    <pixiContainer
+      x={x}
+      y={y}
+      eventMode="static"
+      cursor="pointer"
+      cullable={true}
+      onPointerDown={() => onSelect?.(node.id)}
+      onPointerEnter={() => onHover?.(node.id)}
+      onPointerLeave={() => onHover?.(null)}
+    >
+      <pixiGraphics draw={drawBackground} />
+
+      {/* Name - BitmapText for performance */}
+      {lod !== 'minimal' && (
+        <pixiBitmapText
+          text={person.name}
+          style={{ fontFamily: 'personName', fontSize: lod === 'full' ? 13 : 11 }}
+          x={width / 2}
+          y={lod === 'full' ? 18 : height / 2}
+          anchor={{ x: 0.5, y: lod === 'full' ? 0 : 0.5 }}
+        />
+      )}
+
+      {/* Dates - only at full LOD */}
+      {lod === 'full' && dates && (
+        <pixiBitmapText
+          text={dates}
+          style={{ fontFamily: 'personDates', fontSize: 10 }}
+          x={width / 2}
+          y={38}
+          anchor={{ x: 0.5, y: 0 }}
+        />
+      )}
+
+      {/* Location - only at full LOD */}
+      {lod === 'full' && person.birthLocation && (
+        <pixiBitmapText
+          text={truncateLocation(person.birthLocation)}
+          style={{ fontFamily: 'personLocation', fontSize: 9 }}
+          x={width / 2}
+          y={height - 10}
+          anchor={{ x: 0.5, y: 1 }}
+        />
+      )}
+    </pixiContainer>
+  );
+}
+```
+
+#### Limitations to Consider
+
+| Feature | Regular Text | BitmapText |
+|---------|-------------|------------|
+| Drop shadows | ✓ | ✗ |
+| Gradients | ✓ | ✗ |
+| Word wrap | ✓ | Manual |
+| CJK characters | ✓ | Impractical |
+| Scaling quality | Excellent | Can pixelate |
+
+**Workaround for Word Wrap:**
+
+```typescript
+// Manual word wrap for BitmapText
+function wrapText(text: string, maxWidth: number, fontSize: number): string {
+  const charWidth = fontSize * 0.6; // Approximate
+  const maxChars = Math.floor(maxWidth / charWidth);
+
+  if (text.length <= maxChars) return text;
+  return text.slice(0, maxChars - 3) + '...';
+}
+```
+
+---
+
+### Performance Impact Summary
+
+| Optimization | Impact | Complexity | Priority |
+|--------------|--------|------------|----------|
+| Web Workers | UI responsiveness for >10k nodes | Medium | High |
+| Texture Atlas | 3-4x render speed | Low | Medium |
+| BitmapText | 100x text update speed | Low | Medium |
+| ParticleContainer | 5x for 1M+ nodes | High | Low |
+
+### Implementation Order
+
+1. **Current:** PixiJS v8 + R-Tree culling + LOD (✅ Done)
+2. **Next:** BitmapText for text rendering (easy win)
+3. **Then:** Texture atlas for node backgrounds
+4. **When needed:** Web Worker layout (for trees >10k nodes)
+5. **Extreme scale:** ParticleContainer (1M+ nodes)
+
+---
+
 ## References
 
 - [PixiJS v8 Documentation](https://pixijs.com/8.x/guides)
@@ -1292,3 +1833,12 @@ function mapDbPersonToRawPerson(dbPerson: Person): RawPerson {
 - [PixiJS Performance Tips](https://pixijs.com/8.x/guides/concepts/performance-tips)
 - [rbush R-Tree](https://github.com/mourner/rbush)
 - [WebGPU Renderer](https://pixijs.download/dev/docs/rendering.WebGPURenderer.html)
+- [Vite Web Workers Guide](https://vite.dev/guide/features)
+- [Comlink Library](https://github.com/GoogleChromeLabs/comlink)
+- [PixiJS Textures Guide](https://pixijs.com/8.x/guides/components/textures)
+- [PixiJS RenderTexture API](https://pixijs.download/v8.8.1/docs/rendering.RenderTexture.html)
+- [PixiJS ParticleContainer](https://pixijs.com/8.x/guides/components/scene-objects/particle-container)
+- [PixiJS BitmapText API](https://pixijs.download/dev/docs/scene.BitmapText.html)
+- [PixiJS BitmapFont API](https://pixijs.download/dev/docs/text.BitmapFont.html)
+- [PixiJS Cache As Texture](https://pixijs.com/8.x/guides/components/scene-objects/container/cache-as-texture)
+- [PixiJS Garbage Collection](https://pixijs.com/8.x/guides/concepts/garbage-collection)

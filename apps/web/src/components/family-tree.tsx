@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 
-import { FamilyTree as PixiFamilyTree, type RawPerson, type Person as VizPerson } from "@funk-tree/tree-viz";
+import { FamilyTreeWithWorker, type RawPerson, type Person as VizPerson } from "@funk-tree/tree-viz";
 
 import type { Person } from "./person-card";
 import { PersonCard } from "./person-card";
@@ -49,7 +49,7 @@ export function FamilyTree({ data, rootWikiId, onPersonClick }: FamilyTreeProps)
 
   return (
     <div className="relative h-full w-full">
-      <PixiFamilyTree
+      <FamilyTreeWithWorker
         persons={rawPersons}
         rootId={rootWikiId}
         className="h-full w-full"

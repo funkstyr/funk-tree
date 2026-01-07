@@ -1,10 +1,11 @@
-import { useCallback, useMemo } from "react";
-import type { Graphics as PixiGraphics } from "pixi.js";
+import { useMemo } from "react";
+import type { RenderTexture } from "pixi.js";
 import type { TreeNode } from "../../core/data/types";
 
-interface NodeSpriteProps {
+interface OptimizedNodeSpriteProps {
   node: TreeNode;
   scale: number;
+  baseTexture: RenderTexture;
   onSelect?: (nodeId: string) => void;
   onHover?: (nodeId: string | null) => void;
 }
@@ -25,40 +26,34 @@ function getDetailLevel(scale: number): DetailLevel {
   return "minimal";
 }
 
-export function NodeSprite({
+/**
+ * Optimized node sprite using pre-rendered textures with tinting.
+ * All nodes use the same base texture and apply tint for color,
+ * allowing maximum GPU batching.
+ */
+export function OptimizedNodeSprite({
   node,
   scale,
+  baseTexture,
   onSelect,
   onHover,
-}: NodeSpriteProps) {
+}: OptimizedNodeSpriteProps) {
   const { x, y, width, height, person, selected, highlighted } = node;
   const lod = getDetailLevel(scale);
 
-  const fillColor = useMemo(() => {
+  // Calculate tint based on state
+  const tint = useMemo(() => {
     if (selected) return COLORS.selected;
     if (person.gender === "M") return COLORS.male;
     if (person.gender === "F") return COLORS.female;
     return COLORS.unknown;
   }, [selected, person.gender]);
 
-  const drawBackground = useCallback(
-    (g: PixiGraphics) => {
-      g.clear();
-      g.roundRect(0, 0, width, height, 8);
-      g.fill({ color: fillColor });
-
-      if (highlighted) {
-        g.stroke({ color: COLORS.highlighted, width: 3 });
-      }
-    },
-    [width, height, fillColor, highlighted]
-  );
-
   const dates = useMemo(() => {
     return [person.birthDate, person.deathDate].filter(Boolean).join(" - ");
   }, [person.birthDate, person.deathDate]);
 
-  // Truncate name for display (BitmapText doesn't support word wrap)
+  // Truncate name for display
   const displayName = useMemo(() => {
     return truncateText(person.name, width - 16, lod === "full" ? 13 : 11);
   }, [person.name, width, lod]);
@@ -80,9 +75,26 @@ export function NodeSprite({
       onPointerEnter={() => onHover?.(node.id)}
       onPointerLeave={() => onHover?.(null)}
     >
-      <pixiGraphics draw={drawBackground} />
+      {/* Background sprite with tinting - enables maximum batching */}
+      <pixiSprite
+        texture={baseTexture}
+        tint={tint}
+        width={width}
+        height={height}
+      />
 
-      {/* Name - BitmapText for performance (shown at medium and full LOD) */}
+      {/* Highlight border when hovered */}
+      {highlighted && (
+        <pixiGraphics
+          draw={(g) => {
+            g.clear();
+            g.roundRect(0, 0, width, height, 8);
+            g.stroke({ color: COLORS.highlighted, width: 3 });
+          }}
+        />
+      )}
+
+      {/* Name - BitmapText (shown at medium and full LOD) */}
       {lod !== "minimal" && (
         <pixiBitmapText
           text={displayName}
@@ -127,12 +139,7 @@ export function NodeSprite({
   );
 }
 
-/**
- * Truncate text to fit within a given width.
- * Uses approximate character width calculation.
- */
 function truncateText(text: string, maxWidth: number, fontSize: number): string {
-  // Approximate character width (varies by font, this is a rough estimate)
   const avgCharWidth = fontSize * 0.55;
   const maxChars = Math.floor(maxWidth / avgCharWidth);
 

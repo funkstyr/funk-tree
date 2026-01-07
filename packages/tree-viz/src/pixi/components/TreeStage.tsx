@@ -1,8 +1,12 @@
 import { Application } from "@pixi/react";
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 
 // Import extend to register components
 import "../extend";
+import {
+  initializeBitmapFonts,
+  cleanupBitmapFonts,
+} from "../fonts/initFonts";
 
 interface TreeStageProps {
   children: ReactNode;
@@ -17,6 +21,14 @@ export function TreeStage({
   height,
   backgroundColor = 0x1a1a2e,
 }: TreeStageProps) {
+  // Initialize bitmap fonts on mount
+  useEffect(() => {
+    initializeBitmapFonts();
+    return () => {
+      cleanupBitmapFonts();
+    };
+  }, []);
+
   return (
     <Application
       width={width}

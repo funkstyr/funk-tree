@@ -6,19 +6,28 @@ import { useViewport } from "../pixi/hooks/useViewport";
 import { computeLayout } from "../core/layout/generation-layout";
 import { buildTreeState, type RawPerson } from "../core/data/transform";
 import { SpatialIndex } from "../core/spatial/rtree";
-import type { Person, TreeState, TreeNode } from "../core/data/types";
+import { useLayoutWorker } from "../hooks/useLayoutWorker";
+import type { Person, TreeState, TreeNode, LayoutConfig } from "../core/data/types";
 
-export interface FamilyTreeProps {
+export interface FamilyTreeWithWorkerProps {
   persons: RawPerson[];
   rootId: string;
   width?: number;
   height?: number;
   className?: string;
+  /** Use Web Worker for layout computation (default: true) */
+  useWorker?: boolean;
+  /** Timeout for worker computation in ms (default: 30000) */
+  workerTimeout?: number;
   onPersonSelect?: (person: Person) => void;
   onPersonHover?: (person: Person | null) => void;
+  /** Called when layout computation starts */
+  onLayoutStart?: () => void;
+  /** Called when layout computation ends */
+  onLayoutEnd?: (duration: number) => void;
 }
 
-const LAYOUT_CONFIG = {
+const LAYOUT_CONFIG: LayoutConfig = {
   nodeWidth: 180,
   nodeHeight: 70,
   horizontalGap: 40,
@@ -26,15 +35,23 @@ const LAYOUT_CONFIG = {
   spouseGap: 20,
 };
 
-export function FamilyTree({
+/**
+ * FamilyTree component with Web Worker support for layout computation.
+ * Automatically falls back to main thread if workers are unavailable.
+ */
+export function FamilyTreeWithWorker({
   persons,
   rootId,
   width: initialWidth = 800,
   height: initialHeight = 600,
   className,
+  useWorker = true,
+  workerTimeout = 30000,
   onPersonSelect,
   onPersonHover,
-}: FamilyTreeProps) {
+  onLayoutStart,
+  onLayoutEnd,
+}: FamilyTreeWithWorkerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const spatialIndexRef = useRef(new SpatialIndex());
   const [dimensions, setDimensions] = useState({
@@ -44,6 +61,18 @@ export function FamilyTree({
   const [treeState, setTreeState] = useState<TreeState | null>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  const [isLayoutComputing, setIsLayoutComputing] = useState(false);
+
+  // Worker hook
+  const {
+    computeLayout: computeLayoutInWorker,
+    isReady: workerReady,
+    isComputing: workerComputing,
+    error: _workerError,
+  } = useLayoutWorker({
+    timeout: workerTimeout,
+    enabled: useWorker,
+  });
 
   // Viewport management
   const {
@@ -63,18 +92,51 @@ export function FamilyTree({
       return;
     }
 
-    const state = buildTreeState(persons, rootId);
-    const laidOut = computeLayout(state, LAYOUT_CONFIG);
-    setTreeState(laidOut);
+    const startTime = performance.now();
+    onLayoutStart?.();
+    setIsLayoutComputing(true);
 
-    // Build spatial index
-    spatialIndexRef.current.load(Array.from(laidOut.nodes.values()));
+    const doLayout = async () => {
+      try {
+        let laidOut: TreeState;
 
-    // Fit to bounds on initial load
-    if (laidOut.bounds && dimensions.width > 0 && dimensions.height > 0) {
-      fitToBounds(laidOut.bounds, dimensions.width, dimensions.height);
-    }
-  }, [persons, rootId]);
+        // Try worker first if enabled and ready
+        if (useWorker && workerReady) {
+          try {
+            laidOut = await computeLayoutInWorker(persons, rootId, LAYOUT_CONFIG);
+          } catch (err) {
+            // Fallback to main thread on worker error
+            console.warn("Worker layout failed, falling back to main thread:", err);
+            const state = buildTreeState(persons, rootId);
+            laidOut = computeLayout(state, LAYOUT_CONFIG);
+          }
+        } else {
+          // Main thread computation
+          const state = buildTreeState(persons, rootId);
+          laidOut = computeLayout(state, LAYOUT_CONFIG);
+        }
+
+        setTreeState(laidOut);
+
+        // Build spatial index
+        spatialIndexRef.current.load(Array.from(laidOut.nodes.values()));
+
+        // Fit to bounds on initial load
+        if (laidOut.bounds && dimensions.width > 0 && dimensions.height > 0) {
+          fitToBounds(laidOut.bounds, dimensions.width, dimensions.height);
+        }
+
+        const duration = performance.now() - startTime;
+        onLayoutEnd?.(duration);
+      } catch (err) {
+        console.error("Layout computation failed:", err);
+      } finally {
+        setIsLayoutComputing(false);
+      }
+    };
+
+    doLayout();
+  }, [persons, rootId, useWorker, workerReady, computeLayoutInWorker]);
 
   // Refit when dimensions change
   useEffect(() => {
@@ -159,7 +221,6 @@ export function FamilyTree({
   // Handle click on background (deselect)
   const handleBackgroundClick = useCallback(
     (e: React.MouseEvent) => {
-      // Only deselect if clicking directly on the container (not a node)
       if (e.target === e.currentTarget) {
         setSelectedNodeId(null);
         onPersonSelect?.(null as unknown as Person);
@@ -167,6 +228,8 @@ export function FamilyTree({
     },
     [onPersonSelect]
   );
+
+  const isLoading = isLayoutComputing || workerComputing;
 
   return (
     <div
@@ -176,7 +239,7 @@ export function FamilyTree({
         width: "100%",
         height: "100%",
         overflow: "hidden",
-        cursor: "grab",
+        cursor: isLoading ? "wait" : "grab",
         position: "relative",
       }}
       onWheel={handlers.onWheel}
@@ -197,6 +260,25 @@ export function FamilyTree({
             onHover={handleHover}
           />
         </TreeStage>
+      )}
+
+      {/* Loading indicator */}
+      {isLoading && (
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            background: "rgba(0, 0, 0, 0.7)",
+            color: "white",
+            padding: "12px 24px",
+            borderRadius: "8px",
+            fontSize: "14px",
+          }}
+        >
+          Computing layout...
+        </div>
       )}
     </div>
   );

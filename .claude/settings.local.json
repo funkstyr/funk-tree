@@ -8,7 +8,8 @@
       "WebFetch(domain:ancestors.familysearch.org)",
       "WebFetch(domain:www.familysearch.org)",
       "WebSearch",
-      "WebFetch(domain:www.geni.com)"
+      "WebFetch(domain:www.geni.com)",
+      "WebFetch(domain:api.pixijs.io)"
     ]
   }
 }

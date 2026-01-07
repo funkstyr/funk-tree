@@ -1,5 +1,5 @@
 import { extend } from "@pixi/react";
-import { Container, Graphics, Text, Sprite } from "pixi.js";
+import { Container, Graphics, Text, Sprite, BitmapText } from "pixi.js";
 
 // Register PixiJS components with @pixi/react
 // This must be called before using any pixi-react components
@@ -8,7 +8,8 @@ extend({
   Graphics,
   Text,
   Sprite,
+  BitmapText,
 });
 
 // Re-export for convenience
-export { Container, Graphics, Text, Sprite };
+export { Container, Graphics, Text, Sprite, BitmapText };
