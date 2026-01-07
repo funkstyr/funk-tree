@@ -2,6 +2,7 @@ import { eq, sql, count, desc, asc } from "drizzle-orm";
 import type { PGLiteDatabase } from "@funk-tree/db/pglite";
 import { persons, crawlQueue, type NewPerson } from "@funk-tree/db/schema";
 import { wikitreeApi, type WikiTreeProfile } from "./wikitree-api";
+import { buildFullName, extractIds, isValidId } from "./utils";
 
 const SAVE_INTERVAL = 25;
 
@@ -14,44 +15,6 @@ export class WikiTreeCrawler {
     this.db = db;
   }
 
-  private buildFullName(profile: WikiTreeProfile): string {
-    const parts: string[] = [];
-    if (profile.FirstName) parts.push(profile.FirstName);
-    if (profile.MiddleName) parts.push(profile.MiddleName);
-    if (profile.LastNameAtBirth) parts.push(profile.LastNameAtBirth);
-    else if (profile.LastNameCurrent) parts.push(profile.LastNameCurrent);
-    if (profile.Suffix) parts.push(profile.Suffix);
-    return parts.length > 0 ? parts.join(" ") : profile.Name || "Unknown";
-  }
-
-  private extractIds(items: Record<string, unknown> | unknown[] | undefined): string[] {
-    if (!items) return [];
-
-    if (Array.isArray(items)) {
-      return items
-        .map((item) => {
-          if (typeof item === "object" && item !== null) {
-            return (item as Record<string, unknown>).Name as string;
-          }
-          return null;
-        })
-        .filter((id): id is string => id !== null);
-    }
-
-    if (typeof items === "object") {
-      return Object.keys(items);
-    }
-
-    return [];
-  }
-
-  private isValidId(id: unknown): boolean {
-    if (!id) return false;
-    if (typeof id === "number" && id === 0) return false;
-    if (typeof id === "string" && (id === "0" || id === "")) return false;
-    return true;
-  }
-
   async processProfile(profile: WikiTreeProfile): Promise<void> {
     const wikiId = profile.Name;
     if (!wikiId) return;
@@ -60,7 +23,7 @@ export class WikiTreeCrawler {
     const personData: NewPerson = {
       wikiId,
       wikiNumericId: profile.Id,
-      name: this.buildFullName(profile),
+      name: buildFullName(profile),
       firstName: profile.FirstName || null,
       middleName: profile.MiddleName || null,
       lastNameBirth: profile.LastNameAtBirth || null,
@@ -72,8 +35,8 @@ export class WikiTreeCrawler {
       birthLocation: profile.BirthLocation || null,
       deathLocation: profile.DeathLocation || null,
       isLiving: profile.IsLiving === 1,
-      fatherWikiId: this.isValidId(profile.Father) ? String(profile.Father) : null,
-      motherWikiId: this.isValidId(profile.Mother) ? String(profile.Mother) : null,
+      fatherWikiId: isValidId(profile.Father) ? String(profile.Father) : null,
+      motherWikiId: isValidId(profile.Mother) ? String(profile.Mother) : null,
     };
 
     await this.db
@@ -105,12 +68,12 @@ export class WikiTreeCrawler {
     // }
 
     // Spouses
-    const spouseIds = this.extractIds(profile.Spouses);
-    toQueue.push(...spouseIds.filter((id) => this.isValidId(id)));
+    const spouseIds = extractIds(profile.Spouses);
+    toQueue.push(...spouseIds.filter((id) => isValidId(id)));
 
     // Children
-    const childIds = this.extractIds(profile.Children);
-    toQueue.push(...childIds.filter((id) => this.isValidId(id)));
+    const childIds = extractIds(profile.Children);
+    toQueue.push(...childIds.filter((id) => isValidId(id)));
 
     // Add to queue (ignore duplicates)
     for (const wikiId of toQueue) {

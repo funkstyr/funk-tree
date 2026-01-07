@@ -1,5 +1,5 @@
 {
-  "extends": "@funk-tree/config/base.json",
+  "extends": "@funk-tree/config/tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src"
