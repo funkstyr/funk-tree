@@ -1,0 +1,26 @@
+{
+  "name": "@funk-tree/tree-viz",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./react": "./src/react/index.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "pixi.js": "^8.6.6",
+    "@pixi/react": "^8.0.0",
+    "rbush": "^4.0.1"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@funk-tree/config": "workspace:*",
+    "@types/react": "^19.0.0",
+    "typescript": "catalog:"
+  }
+}
