@@ -192,15 +192,15 @@ export class WikiTreeCrawler {
   private async queueRelatives(profile: WikiTreeProfile): Promise<void> {
     const toQueue: string[] = [];
 
-    // Father
-    if (this.isValidId(profile.Father)) {
-      toQueue.push(String(profile.Father));
-    }
+    // // Father
+    // if (this.isValidId(profile.Father)) {
+    //   toQueue.push(String(profile.Father));
+    // }
 
-    // Mother
-    if (this.isValidId(profile.Mother)) {
-      toQueue.push(String(profile.Mother));
-    }
+    // // Mother
+    // if (this.isValidId(profile.Mother)) {
+    //   toQueue.push(String(profile.Mother));
+    // }
 
     // Spouses
     const spouseIds = this.extractIds(profile.Spouses);
