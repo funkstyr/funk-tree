@@ -1,0 +1,21 @@
+{
+  "name": "@funk-tree/crawler",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "crawl": "bun run src/index.ts crawl",
+    "migrate": "bun run src/migrate.ts",
+    "status": "bun run src/index.ts status"
+  },
+  "dependencies": {
+    "@funk-tree/db": "workspace:*",
+    "@electric-sql/pglite": "^0.2.17",
+    "drizzle-orm": "^0.45.1"
+  },
+  "devDependencies": {
+    "@funk-tree/config": "workspace:*",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  }
+}

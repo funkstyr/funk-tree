@@ -1,0 +1,3 @@
+{
+  "extends": "@funk-tree-new/config/tsconfig.base.json"
+}

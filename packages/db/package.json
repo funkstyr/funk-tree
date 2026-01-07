@@ -1,0 +1,42 @@
+{
+  "name": "@funk-tree/db",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./pglite": {
+      "default": "./src/pglite.ts"
+    },
+    "./schema": {
+      "default": "./src/schema/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {
+    "db:push": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate",
+    "db:studio": "drizzle-kit studio",
+    "db:migrate": "drizzle-kit migrate",
+    "db:start": "docker compose up -d",
+    "db:watch": "docker compose up",
+    "db:stop": "docker compose stop",
+    "db:down": "docker compose down"
+  },
+  "dependencies": {
+    "@funk-tree/env": "workspace:*",
+    "@electric-sql/pglite": "^0.2.17",
+    "dotenv": "catalog:",
+    "drizzle-orm": "^0.45.1",
+    "pg": "^8.16.3",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@funk-tree/config": "workspace:*",
+    "@types/pg": "^8.15.6",
+    "drizzle-kit": "^0.31.8",
+    "typescript": "catalog:"
+  }
+}
