@@ -5,24 +5,30 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { MigrationMap, TimeSlider } from "@funk-tree/map-viz/react";
 import type { MapPoint } from "@funk-tree/map-viz";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLocalDb } from "@/hooks/use-local-db";
+import { getMapData } from "@/hooks/local-queries";
 
 export const Route = createFileRoute("/map/")({
   component: MapPage,
 });
 
 function MapPage() {
-  const { orpc } = Route.useRouteContext();
   const navigate = useNavigate();
+  const { db, status: dbStatus, error: dbError } = useLocalDb();
 
   const [selectedYear, setSelectedYear] = useState(1800);
   const [isPlaying, setIsPlaying] = useState(false);
   const [hoveredPoint, setHoveredPoint] = useState<MapPoint | null>(null);
 
-  const { data, isLoading, error } = useQuery(
-    orpc.genealogy.getMapData.queryOptions({
-      input: {},
-    }),
-  );
+  // Use local database for map data
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["local", "mapData"],
+    queryFn: async () => {
+      if (!db) throw new Error("Database not ready");
+      return getMapData(db);
+    },
+    enabled: dbStatus === "ready" && db !== null,
+  });
 
   // Initialize selected year to the middle of the range
   useEffect(() => {
@@ -62,6 +68,29 @@ function MapPage() {
     setHoveredPoint(point);
   }, []);
 
+  // Show loading state for database or query
+  if (dbStatus !== "ready" && dbStatus !== "error") {
+    const statusMessage =
+      {
+        idle: "Initializing...",
+        checking: "Checking local database...",
+        fetching: "Downloading database...",
+        loading: "Loading database...",
+      }[dbStatus] || "Loading...";
+
+    return (
+      <div className="flex h-full flex-col gap-4 p-8">
+        <Skeleton className="h-8 w-64" />
+        <div className="flex flex-1 items-center justify-center">
+          <div className="text-center">
+            <div className="animate-pulse text-lg text-gray-300">{statusMessage}</div>
+            <p className="text-sm text-gray-500 mt-2">This may take a moment on first load</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="flex h-full flex-col gap-4 p-8">
@@ -71,12 +100,17 @@ function MapPage() {
     );
   }
 
-  if (error) {
+  if (dbError || error) {
+    const errorMsg = dbError?.message || error?.message || "Unknown error";
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-red-400">Error loading map data</h2>
-          <p className="text-gray-400">{error.message}</p>
+          <p className="text-gray-400">{errorMsg}</p>
+          <p className="text-sm text-gray-500 mt-4">
+            Make sure the database export exists at{" "}
+            <code className="bg-gray-800 px-2 py-1 rounded">/data/funk-tree.tar.gz</code>
+          </p>
         </div>
       </div>
     );

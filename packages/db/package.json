@@ -8,6 +8,9 @@
     "./pglite": {
       "default": "./src/pglite.ts"
     },
+    "./browser": {
+      "default": "./src/browser.ts"
+    },
     "./schema": {
       "default": "./src/schema/index.ts"
     },

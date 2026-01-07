@@ -3,6 +3,7 @@ import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 
 import "./index.css";
 import Loader from "./components/loader";
+import { LocalDbProvider } from "./hooks/use-local-db";
 import { routeTree } from "./routeTree.gen";
 import { orpc, queryClient } from "./utils/orpc";
 
@@ -15,7 +16,9 @@ export const getRouter = () => {
     defaultPendingComponent: () => <Loader />,
     defaultNotFoundComponent: () => <div>Not Found</div>,
     Wrap: ({ children }) => (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <LocalDbProvider>{children}</LocalDbProvider>
+      </QueryClientProvider>
     ),
   });
   return router;

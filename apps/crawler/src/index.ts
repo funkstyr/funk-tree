@@ -13,7 +13,16 @@ async function main() {
   console.log("============================================================");
   console.log();
 
-  // Initialize database
+  // Export command doesn't need to initialize the drizzle db
+  if (command === "export") {
+    const { exportDatabase } = await import("./export");
+    const outputPath = process.argv[3] || "../../apps/web/public/data/funk-tree.tar.gz";
+    await exportDatabase(DATA_DIR, outputPath);
+    console.log("\nDone.");
+    return;
+  }
+
+  // Initialize database with migrations for other commands
   console.log(`Initializing PGLite database at: ${DATA_DIR}`);
   const db = createPGLiteDb(DATA_DIR);
   await migratePGLiteDb(db);
@@ -47,6 +56,7 @@ async function main() {
       console.log("  bun run crawl [start_id]  - Start/continue crawling");
       console.log("  bun run status            - Show database status");
       console.log("  bun run geocode           - Geocode birth locations");
+      console.log("  bun run export [output]   - Export database for browser");
   }
 
   console.log("\nDone.");

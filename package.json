@@ -40,6 +40,7 @@
     "crawl:migrate": "turbo -F @funk-tree/crawler migrate",
     "crawl:status": "turbo -F @funk-tree/crawler status",
     "crawl:geocode": "turbo -F @funk-tree/crawler geocode",
+    "crawl:export": "turbo -F @funk-tree/crawler export",
     "check": "oxlint && oxfmt --write",
     "check:type-aware": "oxlint --tsconfig tsconfig.json",
     "test": "vitest run",

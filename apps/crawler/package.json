@@ -8,6 +8,7 @@
     "migrate": "bun run src/migrate.ts",
     "status": "bun run src/index.ts status",
     "geocode": "bun run src/index.ts geocode",
+    "export": "bun run src/index.ts export",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
