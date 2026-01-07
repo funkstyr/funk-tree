@@ -222,6 +222,7 @@
         "@types/rbush": "^4.0.0",
         "@types/react": "^19.0.0",
         "typescript": "catalog:",
+        "vitest": "catalog:",
       },
       "peerDependencies": {
         "react": "^19.0.0",

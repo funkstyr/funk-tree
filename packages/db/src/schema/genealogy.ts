@@ -38,6 +38,9 @@ export const persons = pgTable(
     index("idx_persons_wiki_id").on(table.wikiId),
     index("idx_persons_birth_location").on(table.birthLocation),
     index("idx_persons_last_name").on(table.lastNameBirth),
+    // Additional indexes for relationship queries
+    index("idx_persons_father_wiki_id").on(table.fatherWikiId),
+    index("idx_persons_mother_wiki_id").on(table.motherWikiId),
   ],
 );
 
@@ -96,7 +99,11 @@ export const locations = pgTable(
     city: text("city"),
     geocodedAt: timestamp("geocoded_at"),
   },
-  (table) => [index("idx_locations_raw").on(table.rawLocation)],
+  (table) => [
+    index("idx_locations_raw").on(table.rawLocation),
+    // Index for map queries filtering by coordinates
+    index("idx_locations_coords").on(table.latitude, table.longitude),
+  ],
 );
 
 // Crawl metadata for tracking progress

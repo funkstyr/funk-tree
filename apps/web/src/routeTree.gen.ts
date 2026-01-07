@@ -8,170 +8,148 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as SearchRouteImport } from './routes/search'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as TreeIndexRouteImport } from './routes/tree/index'
-import { Route as MapIndexRouteImport } from './routes/map/index'
-import { Route as TreeWikiIdRouteImport } from './routes/tree/$wikiId'
+import { Route as rootRouteImport } from "./routes/__root";
+import { Route as SearchRouteImport } from "./routes/search";
+import { Route as LoginRouteImport } from "./routes/login";
+import { Route as DashboardRouteImport } from "./routes/dashboard";
+import { Route as IndexRouteImport } from "./routes/index";
+import { Route as TreeIndexRouteImport } from "./routes/tree/index";
+import { Route as MapIndexRouteImport } from "./routes/map/index";
+import { Route as TreeWikiIdRouteImport } from "./routes/tree/$wikiId";
 
 const SearchRoute = SearchRouteImport.update({
-  id: '/search',
-  path: '/search',
+  id: "/search",
+  path: "/search",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+  id: "/login",
+  path: "/login",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+  id: "/dashboard",
+  path: "/dashboard",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const TreeIndexRoute = TreeIndexRouteImport.update({
-  id: '/tree/',
-  path: '/tree/',
+  id: "/tree/",
+  path: "/tree/",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const MapIndexRoute = MapIndexRouteImport.update({
-  id: '/map/',
-  path: '/map/',
+  id: "/map/",
+  path: "/map/",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const TreeWikiIdRoute = TreeWikiIdRouteImport.update({
-  id: '/tree/$wikiId',
-  path: '/tree/$wikiId',
+  id: "/tree/$wikiId",
+  path: "/tree/$wikiId",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
-  '/login': typeof LoginRoute
-  '/search': typeof SearchRoute
-  '/tree/$wikiId': typeof TreeWikiIdRoute
-  '/map': typeof MapIndexRoute
-  '/tree': typeof TreeIndexRoute
+  "/": typeof IndexRoute;
+  "/dashboard": typeof DashboardRoute;
+  "/login": typeof LoginRoute;
+  "/search": typeof SearchRoute;
+  "/tree/$wikiId": typeof TreeWikiIdRoute;
+  "/map": typeof MapIndexRoute;
+  "/tree": typeof TreeIndexRoute;
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
-  '/login': typeof LoginRoute
-  '/search': typeof SearchRoute
-  '/tree/$wikiId': typeof TreeWikiIdRoute
-  '/map': typeof MapIndexRoute
-  '/tree': typeof TreeIndexRoute
+  "/": typeof IndexRoute;
+  "/dashboard": typeof DashboardRoute;
+  "/login": typeof LoginRoute;
+  "/search": typeof SearchRoute;
+  "/tree/$wikiId": typeof TreeWikiIdRoute;
+  "/map": typeof MapIndexRoute;
+  "/tree": typeof TreeIndexRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
-  '/login': typeof LoginRoute
-  '/search': typeof SearchRoute
-  '/tree/$wikiId': typeof TreeWikiIdRoute
-  '/map/': typeof MapIndexRoute
-  '/tree/': typeof TreeIndexRoute
+  __root__: typeof rootRouteImport;
+  "/": typeof IndexRoute;
+  "/dashboard": typeof DashboardRoute;
+  "/login": typeof LoginRoute;
+  "/search": typeof SearchRoute;
+  "/tree/$wikiId": typeof TreeWikiIdRoute;
+  "/map/": typeof MapIndexRoute;
+  "/tree/": typeof TreeIndexRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/dashboard'
-    | '/login'
-    | '/search'
-    | '/tree/$wikiId'
-    | '/map'
-    | '/tree'
-  fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/dashboard'
-    | '/login'
-    | '/search'
-    | '/tree/$wikiId'
-    | '/map'
-    | '/tree'
-  id:
-    | '__root__'
-    | '/'
-    | '/dashboard'
-    | '/login'
-    | '/search'
-    | '/tree/$wikiId'
-    | '/map/'
-    | '/tree/'
-  fileRoutesById: FileRoutesById
+  fileRoutesByFullPath: FileRoutesByFullPath;
+  fullPaths: "/" | "/dashboard" | "/login" | "/search" | "/tree/$wikiId" | "/map" | "/tree";
+  fileRoutesByTo: FileRoutesByTo;
+  to: "/" | "/dashboard" | "/login" | "/search" | "/tree/$wikiId" | "/map" | "/tree";
+  id: "__root__" | "/" | "/dashboard" | "/login" | "/search" | "/tree/$wikiId" | "/map/" | "/tree/";
+  fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  DashboardRoute: typeof DashboardRoute
-  LoginRoute: typeof LoginRoute
-  SearchRoute: typeof SearchRoute
-  TreeWikiIdRoute: typeof TreeWikiIdRoute
-  MapIndexRoute: typeof MapIndexRoute
-  TreeIndexRoute: typeof TreeIndexRoute
+  IndexRoute: typeof IndexRoute;
+  DashboardRoute: typeof DashboardRoute;
+  LoginRoute: typeof LoginRoute;
+  SearchRoute: typeof SearchRoute;
+  TreeWikiIdRoute: typeof TreeWikiIdRoute;
+  MapIndexRoute: typeof MapIndexRoute;
+  TreeIndexRoute: typeof TreeIndexRoute;
 }
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    '/search': {
-      id: '/search'
-      path: '/search'
-      fullPath: '/search'
-      preLoaderRoute: typeof SearchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/tree/': {
-      id: '/tree/'
-      path: '/tree'
-      fullPath: '/tree'
-      preLoaderRoute: typeof TreeIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/map/': {
-      id: '/map/'
-      path: '/map'
-      fullPath: '/map'
-      preLoaderRoute: typeof MapIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/tree/$wikiId': {
-      id: '/tree/$wikiId'
-      path: '/tree/$wikiId'
-      fullPath: '/tree/$wikiId'
-      preLoaderRoute: typeof TreeWikiIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+    "/search": {
+      id: "/search";
+      path: "/search";
+      fullPath: "/search";
+      preLoaderRoute: typeof SearchRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/login": {
+      id: "/login";
+      path: "/login";
+      fullPath: "/login";
+      preLoaderRoute: typeof LoginRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/dashboard": {
+      id: "/dashboard";
+      path: "/dashboard";
+      fullPath: "/dashboard";
+      preLoaderRoute: typeof DashboardRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/": {
+      id: "/";
+      path: "/";
+      fullPath: "/";
+      preLoaderRoute: typeof IndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/tree/": {
+      id: "/tree/";
+      path: "/tree";
+      fullPath: "/tree";
+      preLoaderRoute: typeof TreeIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/map/": {
+      id: "/map/";
+      path: "/map";
+      fullPath: "/map";
+      preLoaderRoute: typeof MapIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/tree/$wikiId": {
+      id: "/tree/$wikiId";
+      path: "/tree/$wikiId";
+      fullPath: "/tree/$wikiId";
+      preLoaderRoute: typeof TreeWikiIdRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
   }
 }
 
@@ -183,16 +161,16 @@ const rootRouteChildren: RootRouteChildren = {
   TreeWikiIdRoute: TreeWikiIdRoute,
   MapIndexRoute: MapIndexRoute,
   TreeIndexRoute: TreeIndexRoute,
-}
+};
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+  ._addFileTypes<FileRouteTypes>();
 
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
+import type { getRouter } from "./router.tsx";
+import type { createStart } from "@tanstack/react-start";
+declare module "@tanstack/react-start" {
   interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
+    ssr: true;
+    router: Awaited<ReturnType<typeof getRouter>>;
   }
 }

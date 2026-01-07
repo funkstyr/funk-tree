@@ -7,7 +7,9 @@
     "./react": "./src/react/index.ts"
   },
   "scripts": {
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@pixi/react": "^8.0.0",
@@ -18,7 +20,8 @@
     "@funk-tree/config": "workspace:*",
     "@types/rbush": "^4.0.0",
     "@types/react": "^19.0.0",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "react": "^19.0.0",

@@ -44,7 +44,9 @@ function assignGenerations(nodes: Map<string, TreeNode>, rootId: string): Map<st
   const visited = new Set<string>();
 
   while (queue.length > 0) {
-    const [id, gen] = queue.shift()!;
+    const item = queue.shift();
+    if (!item) continue;
+    const [id, gen] = item;
     if (visited.has(id)) continue;
     visited.add(id);
 
@@ -100,8 +102,12 @@ function groupByGeneration(
 
   for (const node of nodes.values()) {
     const gen = generations.get(node.id) ?? 0;
-    if (!groups.has(gen)) groups.set(gen, []);
-    groups.get(gen)!.push(node.id);
+    const group = groups.get(gen);
+    if (group) {
+      group.push(node.id);
+    } else {
+      groups.set(gen, [node.id]);
+    }
   }
 
   return groups;
@@ -110,8 +116,11 @@ function groupByGeneration(
 function sortFamiliesInGeneration(nodeIds: string[], nodes: Map<string, TreeNode>): void {
   // Sort by: spouses together, then by number of children (families first)
   nodeIds.sort((a, b) => {
-    const nodeA = nodes.get(a)!;
-    const nodeB = nodes.get(b)!;
+    const nodeA = nodes.get(a);
+    const nodeB = nodes.get(b);
+
+    // Guard against missing nodes
+    if (!nodeA || !nodeB) return 0;
 
     // If A and B are spouses, keep them together
     if (nodeA.spouseIds.includes(b)) return -1;
@@ -132,7 +141,9 @@ function sortFamiliesInGeneration(nodeIds: string[], nodes: Map<string, TreeNode
   for (const id of nodeIds) {
     if (processed.has(id)) continue;
 
-    const node = nodes.get(id)!;
+    const node = nodes.get(id);
+    if (!node) continue;
+
     grouped.push(id);
     processed.add(id);
 
@@ -190,12 +201,117 @@ function centerChildrenUnderParents(
   nodes: Map<string, TreeNode>,
   config: LayoutConfig,
 ): void {
-  // First pass: position all nodes
+  // First pass: position all nodes linearly
   positionNodesWithMap(genGroups, nodes, config);
 
-  // TODO: Second pass - center parents above their children
-  // This would involve calculating child bounds, parent bounds,
-  // and shifting while avoiding overlaps with siblings
+  // Get sorted generation numbers (ascending = ancestors to descendants)
+  const generations = Array.from(genGroups.keys()).sort((a, b) => a - b);
+  if (generations.length < 2) return;
+
+  // Second pass: bottom-up centering - parents above children's centroid
+  // Process from bottom generation upward (skip the last/deepest gen)
+  for (let i = generations.length - 2; i >= 0; i--) {
+    const gen = generations[i];
+    const nodeIds = genGroups.get(gen);
+    if (!nodeIds) continue;
+
+    // Group by family unit (spouse pairs)
+    const familyUnits = groupIntoFamilyUnits(nodeIds, nodes);
+
+    for (const unit of familyUnits) {
+      // Collect all children of this family unit
+      const childXPositions: number[] = [];
+      for (const parentId of unit) {
+        const parent = nodes.get(parentId);
+        if (!parent) continue;
+        for (const childId of parent.childIds) {
+          const child = nodes.get(childId);
+          if (child) {
+            childXPositions.push(child.x + child.width / 2);
+          }
+        }
+      }
+
+      if (childXPositions.length === 0) continue;
+
+      // Calculate centroid of children
+      const childCentroid = childXPositions.reduce((a, b) => a + b, 0) / childXPositions.length;
+
+      // Calculate current center of family unit
+      const unitNodes = unit
+        .map((id) => nodes.get(id))
+        .filter((n): n is TreeNode => n !== undefined);
+      if (unitNodes.length === 0) continue;
+
+      const unitLeft = Math.min(...unitNodes.map((n) => n.x));
+      const unitRight = Math.max(...unitNodes.map((n) => n.x + n.width));
+      const unitCenter = (unitLeft + unitRight) / 2;
+
+      // Shift to center above children
+      const shift = childCentroid - unitCenter;
+      for (const node of unitNodes) {
+        node.x += shift;
+      }
+    }
+
+    // Third pass: resolve overlaps within this generation
+    resolveOverlaps(nodeIds, nodes, config);
+  }
+}
+
+/** Groups node IDs into family units (spouse pairs stay together) */
+function groupIntoFamilyUnits(nodeIds: string[], nodes: Map<string, TreeNode>): string[][] {
+  const units: string[][] = [];
+  const processed = new Set<string>();
+
+  for (const id of nodeIds) {
+    if (processed.has(id)) continue;
+
+    const unit = [id];
+    processed.add(id);
+
+    const node = nodes.get(id);
+    if (node) {
+      for (const spouseId of node.spouseIds) {
+        if (!processed.has(spouseId) && nodeIds.includes(spouseId)) {
+          unit.push(spouseId);
+          processed.add(spouseId);
+        }
+      }
+    }
+
+    units.push(unit);
+  }
+
+  return units;
+}
+
+/** Resolves overlapping nodes by pushing them apart */
+function resolveOverlaps(
+  nodeIds: string[],
+  nodes: Map<string, TreeNode>,
+  config: LayoutConfig,
+): void {
+  // Sort by x position
+  const sortedNodes = nodeIds
+    .map((id) => nodes.get(id))
+    .filter((n): n is TreeNode => n !== undefined)
+    .sort((a, b) => a.x - b.x);
+
+  // Push apart overlapping nodes
+  for (let i = 1; i < sortedNodes.length; i++) {
+    const prev = sortedNodes[i - 1];
+    const curr = sortedNodes[i];
+
+    // Determine gap: smaller for spouses, larger for others
+    const isSpouse = prev.spouseIds.includes(curr.id);
+    const minGap = isSpouse ? config.spouseGap : config.horizontalGap;
+
+    const requiredX = prev.x + prev.width + minGap;
+    if (curr.x < requiredX) {
+      curr.x = requiredX;
+    }
+  }
 }
 
 function computeEdges(nodes: Map<string, TreeNode>): Map<string, TreeEdge> {

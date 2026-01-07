@@ -14,8 +14,9 @@
       "@orpc/server": "^1.12.2",
       "@orpc/openapi": "^1.12.2",
       "@orpc/zod": "^1.12.2",
-      "better-auth": "^1.4.9",
       "@orpc/client": "^1.12.2",
+      "@orpc/tanstack-query": "^1.12.2",
+      "better-auth": "^1.4.9",
       "vitest": "^4.0.15",
       "@vitest/coverage-v8": "^4.0.15"
     }

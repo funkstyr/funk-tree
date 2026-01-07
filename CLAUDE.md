@@ -72,14 +72,15 @@ Turborepo monorepo with bun workspaces. Packages use `@funk-tree/*` prefix.
 
 ### Packages
 
-| Package               | Purpose                                      |
-| --------------------- | -------------------------------------------- |
-| `@funk-tree/api`      | oRPC router and procedures                   |
-| `@funk-tree/db`       | Drizzle ORM, schema (persons, relationships) |
-| `@funk-tree/auth`     | Better Auth integration                      |
-| `@funk-tree/env`      | Environment variable validation (Zod)        |
-| `@funk-tree/config`   | Shared TypeScript & build config             |
-| `@funk-tree/tree-viz` | PixiJS family tree visualization             |
+| Package               | Purpose                                         |
+| --------------------- | ----------------------------------------------- |
+| `@funk-tree/api`      | oRPC router and procedures                      |
+| `@funk-tree/db`       | Drizzle ORM, schema (persons, relationships)    |
+| `@funk-tree/auth`     | Better Auth integration                         |
+| `@funk-tree/env`      | Environment variable validation (Zod)           |
+| `@funk-tree/config`   | Shared TypeScript & build config                |
+| `@funk-tree/tree-viz` | PixiJS family tree visualization                |
+| `@funk-tree/map-viz`  | Migration map visualization (react-simple-maps) |
 
 ### Database Schema
 
@@ -140,6 +141,61 @@ The `@funk-tree/tree-viz` package provides interactive family tree rendering:
 Key files:
 
 - `packages/tree-viz/src/` - Core visualization logic
+
+## Testing
+
+Vitest is used for testing across all packages. Tests run through Turborepo.
+
+### Running Tests
+
+```bash
+bun run test             # All packages
+bun run test:watch       # Watch mode
+bun run test:coverage    # With coverage report
+
+# Single package (from package directory)
+cd packages/tree-viz && bun run test
+```
+
+### Test Configuration
+
+Packages use a shared config factory from `@funk-tree/config`:
+
+```typescript
+// packages/your-pkg/vitest.config.ts
+import { createServerConfig } from "@funk-tree/config/vitest";
+
+export default createServerConfig({
+  name: "your-pkg",
+  coverageExclude: ["src/react/**"], // Optional: exclude from coverage
+});
+```
+
+### Test File Conventions
+
+- Place test files next to source: `module.ts` → `module.test.ts`
+- Use descriptive `describe` blocks matching the function/class name
+- Test edge cases: empty inputs, null values, large datasets
+
+```typescript
+import { describe, it, expect } from "vitest";
+
+describe("functionName", () => {
+  it("handles normal case", () => {
+    expect(functionName(input)).toEqual(expected);
+  });
+
+  it("handles empty input", () => {
+    expect(functionName([])).toEqual([]);
+  });
+});
+```
+
+### Coverage Requirements
+
+- Core algorithms should have >80% coverage
+- React components and PixiJS rendering are excluded from coverage
+- Focus tests on pure functions and business logic
 
 ## Troubleshooting
 

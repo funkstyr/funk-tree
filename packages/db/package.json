@@ -21,7 +21,7 @@
   "scripts": {
     "db:push": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
-    "db:studio": "drizzle-kit studio",
+    "db:studio": "drizzle-kit studio --port=8080",
     "db:migrate": "drizzle-kit migrate",
     "db:start": "docker compose up -d",
     "db:watch": "docker compose up",

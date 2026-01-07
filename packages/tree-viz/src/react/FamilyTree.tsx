@@ -14,7 +14,8 @@ export interface FamilyTreeProps {
   width?: number;
   height?: number;
   className?: string;
-  onPersonSelect?: (person: Person) => void;
+  /** Called when a person node is selected, or null when deselected */
+  onPersonSelect?: (person: Person | null) => void;
   onPersonHover?: (person: Person | null) => void;
 }
 
@@ -156,7 +157,7 @@ export function FamilyTree({
       // Only deselect if clicking directly on the container (not a node)
       if (e.target === e.currentTarget) {
         setSelectedNodeId(null);
-        onPersonSelect?.(null as unknown as Person);
+        onPersonSelect?.(null);
       }
     },
     [onPersonSelect],
