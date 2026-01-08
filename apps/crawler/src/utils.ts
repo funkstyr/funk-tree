@@ -20,7 +20,7 @@ export function buildFullName(profile: WikiTreeProfile): string {
  * (Children, Spouses, Parents can be objects or arrays)
  */
 export function extractIds(
-  items: Record<string, unknown> | readonly unknown[] | unknown[] | undefined,
+  items: Record<string, unknown> | readonly unknown[] | unknown[] | null | undefined,
 ): string[] {
   if (!items) return [];
 

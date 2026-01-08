@@ -70,81 +70,85 @@ export const backupDatabase = (outputPath?: string) =>
     // Check if output file already exists (unlikely with timestamped names, but possible)
     const fileExists = yield* Effect.tryPromise({
       try: () => access(effectiveOutputPath).then(() => true),
-      catch: () => false,
-    });
+      catch: () => new Error("not found"),
+    }).pipe(Effect.catchAll(() => Effect.succeed(false)));
 
     if (fileExists) {
       yield* Effect.logWarning(`Overwriting existing backup: ${effectiveOutputPath}`);
     }
 
-    // Open PGLite database directly
-    const client = yield* Effect.tryPromise({
-      try: async () => {
-        const pg = new PGlite(config.dataDir);
-        await pg.waitReady;
-        return pg;
-      },
-      catch: (error) => new Error(`Failed to open database: ${error}`),
-    });
+    // Use acquireUseRelease for proper cleanup on interruption/failure
+    const result: BackupResult = yield* Effect.acquireUseRelease(
+      // Acquire: Open PGLite database
+      Effect.tryPromise({
+        try: async () => {
+          const pg = new PGlite(config.dataDir);
+          await pg.waitReady;
+          return pg;
+        },
+        catch: (error) => new Error(`Failed to open database: ${error}`),
+      }),
+      // Use: Do the backup work
+      (client) =>
+        Effect.gen(function* () {
+          const personCount = yield* Effect.tryPromise({
+            try: () => client.query<{ count: string }>("SELECT COUNT(*) as count FROM persons"),
+            catch: (error) => new Error(`Failed to count persons: ${error}`),
+          });
 
-    // Get stats
-    const personCount = yield* Effect.tryPromise({
-      try: () => client.query<{ count: string }>("SELECT COUNT(*) as count FROM persons"),
-      catch: (error) => new Error(`Failed to count persons: ${error}`),
-    });
+          const locationCount = yield* Effect.tryPromise({
+            try: () => client.query<{ count: string }>("SELECT COUNT(*) as count FROM locations"),
+            catch: (error) => new Error(`Failed to count locations: ${error}`),
+          });
 
-    const locationCount = yield* Effect.tryPromise({
-      try: () => client.query<{ count: string }>("SELECT COUNT(*) as count FROM locations"),
-      catch: (error) => new Error(`Failed to count locations: ${error}`),
-    });
+          yield* Effect.log("Database contains:");
+          yield* Effect.log(`  - ${personCount.rows[0]?.count ?? 0} persons`);
+          yield* Effect.log(`  - ${locationCount.rows[0]?.count ?? 0} geocoded locations`);
 
-    yield* Effect.log("Database contains:");
-    yield* Effect.log(`  - ${personCount.rows[0]?.count ?? 0} persons`);
-    yield* Effect.log(`  - ${locationCount.rows[0]?.count ?? 0} geocoded locations`);
+          yield* Effect.log("Creating backup...");
 
-    // Dump to gzipped tarball
-    yield* Effect.log("Creating backup...");
+          const dump = yield* Effect.tryPromise({
+            try: () => client.dumpDataDir("gzip"),
+            catch: (error) => new Error(`Failed to dump database: ${error}`),
+          });
 
-    const dump = yield* Effect.tryPromise({
-      try: () => client.dumpDataDir("gzip"),
-      catch: (error) => new Error(`Failed to dump database: ${error}`),
-    });
+          yield* Effect.tryPromise({
+            try: () => mkdir(dirname(effectiveOutputPath), { recursive: true }),
+            catch: (error) => new Error(`Failed to create output directory: ${error}`),
+          });
 
-    // Ensure output directory exists
-    yield* Effect.tryPromise({
-      try: () => mkdir(dirname(effectiveOutputPath), { recursive: true }),
-      catch: (error) => new Error(`Failed to create output directory: ${error}`),
-    });
+          const buffer = yield* Effect.tryPromise({
+            try: async () => Buffer.from(await dump.arrayBuffer()),
+            catch: (error) => new Error(`Failed to read dump buffer: ${error}`),
+          });
 
-    // Write to file
-    const buffer = yield* Effect.tryPromise({
-      try: async () => Buffer.from(await dump.arrayBuffer()),
-      catch: (error) => new Error(`Failed to read dump buffer: ${error}`),
-    });
+          yield* Effect.tryPromise({
+            try: () => writeFile(effectiveOutputPath, buffer),
+            catch: (error) => new Error(`Failed to write backup file: ${error}`),
+          });
 
-    yield* Effect.tryPromise({
-      try: () => writeFile(effectiveOutputPath, buffer),
-      catch: (error) => new Error(`Failed to write backup file: ${error}`),
-    });
+          const sizeMB = (dump.size / 1024 / 1024).toFixed(2);
+          yield* Effect.log("Backup complete!");
+          yield* Effect.log(`  Size: ${sizeMB} MB`);
+          yield* Effect.log(`  Path: ${effectiveOutputPath}`);
 
-    const sizeMB = (dump.size / 1024 / 1024).toFixed(2);
-    yield* Effect.log("Backup complete!");
-    yield* Effect.log(`  Size: ${sizeMB} MB`);
-    yield* Effect.log(`  Path: ${effectiveOutputPath}`);
+          return {
+            personCount: Number(personCount.rows[0]?.count ?? 0),
+            locationCount: Number(locationCount.rows[0]?.count ?? 0),
+            sizeBytes: dump.size,
+            outputPath: effectiveOutputPath,
+            timestamp,
+          };
+        }),
+      // Release: Always close the client (even on error/interrupt)
+      (client) =>
+        Effect.tryPromise({
+          try: () => client.close(),
+          catch: (error) => new Error(`Close failed: ${error}`),
+        }).pipe(Effect.ignore),
+    );
 
-    // Close client
-    yield* Effect.tryPromise({
-      try: () => client.close(),
-      catch: () => undefined,
-    });
-
-    return {
-      personCount: Number(personCount.rows[0]?.count ?? 0),
-      locationCount: Number(locationCount.rows[0]?.count ?? 0),
-      sizeBytes: dump.size,
-      outputPath: effectiveOutputPath,
-      timestamp,
-    };
+    return result;
   }).pipe(Effect.withLogSpan("backup"));
 
 // ============================================================================
@@ -165,8 +169,8 @@ export const restoreDatabase = (sourcePath?: string) =>
     // Check if target database already exists
     const targetExists = yield* Effect.tryPromise({
       try: () => access(config.dataDir).then(() => true),
-      catch: () => false,
-    });
+      catch: () => new Error("not found"),
+    }).pipe(Effect.catchAll(() => Effect.succeed(false)));
 
     if (targetExists) {
       yield* Effect.logWarning(`Existing database at ${config.dataDir} will be replaced`);
@@ -184,53 +188,59 @@ export const restoreDatabase = (sourcePath?: string) =>
     yield* Effect.tryPromise({
       try: () => rm(config.dataDir, { recursive: true, force: true }),
       catch: (error) => {
-        // Expected when directory doesn't exist - force: true should handle most cases
         console.debug(`[restore] Failed to remove existing directory: ${error}`);
         return undefined;
       },
     });
 
-    // Create a new PGLite instance from the backup
     yield* Effect.log("Restoring database from backup...");
 
-    const client = yield* Effect.tryPromise({
-      try: async () => {
-        const blob = new Blob([tarball], { type: "application/gzip" });
-        const pg = new PGlite(config.dataDir, {
-          loadDataDir: blob,
-        });
-        await pg.waitReady;
-        return pg;
-      },
-      catch: (error) => new Error(`Failed to restore database: ${error}`),
-    });
+    // Use acquireUseRelease for proper cleanup on interruption/failure
+    const result: RestoreResult = yield* Effect.acquireUseRelease(
+      // Acquire: Create PGLite instance from backup
+      Effect.tryPromise({
+        try: async () => {
+          const blob = new Blob([tarball], { type: "application/gzip" });
+          const pg = new PGlite(config.dataDir, {
+            loadDataDir: blob,
+          });
+          await pg.waitReady;
+          return pg;
+        },
+        catch: (error) => new Error(`Failed to restore database: ${error}`),
+      }),
+      // Use: Verify restoration
+      (client) =>
+        Effect.gen(function* () {
+          const personCount = yield* Effect.tryPromise({
+            try: () => client.query<{ count: string }>("SELECT COUNT(*) as count FROM persons"),
+            catch: (error) => new Error(`Failed to count persons: ${error}`),
+          });
 
-    // Verify restoration by checking counts
-    const personCount = yield* Effect.tryPromise({
-      try: () => client.query<{ count: string }>("SELECT COUNT(*) as count FROM persons"),
-      catch: (error) => new Error(`Failed to count persons: ${error}`),
-    });
+          const locationCount = yield* Effect.tryPromise({
+            try: () => client.query<{ count: string }>("SELECT COUNT(*) as count FROM locations"),
+            catch: (error) => new Error(`Failed to count locations: ${error}`),
+          });
 
-    const locationCount = yield* Effect.tryPromise({
-      try: () => client.query<{ count: string }>("SELECT COUNT(*) as count FROM locations"),
-      catch: (error) => new Error(`Failed to count locations: ${error}`),
-    });
+          yield* Effect.log("Restore complete!");
+          yield* Effect.log(`  Persons: ${personCount.rows[0]?.count ?? 0}`);
+          yield* Effect.log(`  Locations: ${locationCount.rows[0]?.count ?? 0}`);
 
-    yield* Effect.log("Restore complete!");
-    yield* Effect.log(`  Persons: ${personCount.rows[0]?.count ?? 0}`);
-    yield* Effect.log(`  Locations: ${locationCount.rows[0]?.count ?? 0}`);
+          return {
+            personCount: Number(personCount.rows[0]?.count ?? 0),
+            locationCount: Number(locationCount.rows[0]?.count ?? 0),
+            sourcePath: effectiveSourcePath,
+          };
+        }),
+      // Release: Always close the client (even on error/interrupt)
+      (client) =>
+        Effect.tryPromise({
+          try: () => client.close(),
+          catch: (error) => new Error(`Close failed: ${error}`),
+        }).pipe(Effect.ignore),
+    );
 
-    // Close client
-    yield* Effect.tryPromise({
-      try: () => client.close(),
-      catch: () => undefined,
-    });
-
-    return {
-      personCount: Number(personCount.rows[0]?.count ?? 0),
-      locationCount: Number(locationCount.rows[0]?.count ?? 0),
-      sourcePath: effectiveSourcePath,
-    };
+    return result;
   }).pipe(Effect.withLogSpan("restore"));
 
 // ============================================================================

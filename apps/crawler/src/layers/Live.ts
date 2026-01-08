@@ -43,3 +43,7 @@ export const AppLayerNoGeocode = Layer.mergeAll(
   WikiTreeApiLayer,
   CrawlQueueLayer,
 );
+
+// Minimal layer for export/backup commands that create their own PGLite connection
+// (PGLite only supports one connection at a time to file-based databases)
+export const ExportLayer = ConfigLive;

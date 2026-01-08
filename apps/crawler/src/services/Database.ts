@@ -31,11 +31,12 @@ const pathExists = (path: string) =>
     catch: () => new Error("not found"),
   }).pipe(Effect.catchAll(() => Effect.succeed(false)));
 
+// Returns true if database needs initialization (new), false if it already exists
 const ensureDataDir = (dataDir: string) =>
   Effect.gen(function* () {
-    // Skip for in-memory or IndexedDB
+    // In-memory or IndexedDB always need initialization
     if (dataDir.startsWith("memory://") || dataDir.startsWith("idb://") || dataDir === ":memory:") {
-      return;
+      return true;
     }
 
     // Check if directory exists
@@ -51,10 +52,10 @@ const ensureDataDir = (dataDir: string) =>
             cause: error,
           }),
       });
-      return;
+      return true; // New database, needs migration
     }
 
-    // If exists, verify it's a valid PGLite directory or empty
+    // Check if it's an existing PGLite directory
     const files = yield* Effect.tryPromise({
       try: () => readdir(dataDir),
       catch: () => new Error("read failed"),
@@ -65,12 +66,19 @@ const ensureDataDir = (dataDir: string) =>
     );
     const isEmpty = files.length === 0;
 
-    if (!isPGLiteDir && !isEmpty) {
+    if (isPGLiteDir) {
+      yield* Effect.log("Using existing database");
+      return false; // Existing database, skip migration
+    }
+
+    if (!isEmpty) {
       yield* Effect.logWarning(
         `Directory ${dataDir} exists but doesn't appear to be a PGLite database. ` +
           `Contents: [${files.slice(0, 5).join(", ")}${files.length > 5 ? "..." : ""}]`,
       );
     }
+
+    return true; // Empty or unknown directory, needs migration
   });
 
 // ============================================================================
@@ -85,8 +93,8 @@ export const DatabaseLive = Layer.scoped(
 
     yield* Effect.log(`Initializing database at: ${config.dataDir}`);
 
-    // Ensure data directory exists and is valid
-    yield* ensureDataDir(config.dataDir);
+    // Ensure data directory exists and check if we need to run migrations
+    const needsMigration = yield* ensureDataDir(config.dataDir);
 
     // Create database (this is synchronous in the original code)
     const db = yield* Effect.try({
@@ -98,23 +106,31 @@ export const DatabaseLive = Layer.scoped(
         }),
     });
 
-    // Run migrations
-    yield* Effect.tryPromise({
-      try: () => migratePGLiteDb(db),
-      catch: (error) =>
-        new DatabaseMigrationError({
-          message: "Failed to run database migrations",
-          cause: error,
-        }),
-    });
+    // Only run migrations for new databases
+    if (needsMigration) {
+      yield* Effect.tryPromise({
+        try: () => migratePGLiteDb(db),
+        catch: (error) =>
+          new DatabaseMigrationError({
+            message: "Failed to run database migrations",
+            cause: error,
+          }),
+      });
+      yield* Effect.log("Database migrations complete");
+    }
 
-    yield* Effect.log("Database migrations complete");
-
-    // Add finalizer for cleanup (though Drizzle with PGLite doesn't require explicit close)
+    // Add finalizer for proper cleanup on shutdown (prevents corruption on Ctrl+C)
     yield* Effect.addFinalizer(() =>
-      Effect.sync(() => {
-        // PGLite cleanup handled by the underlying client
-      }).pipe(Effect.tap(() => Effect.log("Database connection closed"))),
+      Effect.gen(function* () {
+        yield* Effect.log("Closing database connection...");
+        // Access underlying PGLite client and close it properly
+        const client = db.$client;
+        yield* Effect.tryPromise({
+          try: () => client.close(),
+          catch: (error) => new Error(`Close failed: ${error}`),
+        }).pipe(Effect.ignore);
+        yield* Effect.log("Database connection closed");
+      }),
     );
 
     return { db };
@@ -143,6 +159,13 @@ export const DatabaseTest = Layer.scoped(
         }),
     });
 
+    yield* Effect.addFinalizer(() =>
+      Effect.tryPromise({
+        try: () => db.$client.close(),
+        catch: (error) => new Error(`Close failed: ${error}`),
+      }).pipe(Effect.ignore),
+    );
+
     return { db };
   }),
 );
@@ -154,8 +177,8 @@ export const makeDatabaseLayer = (dataDir: string) =>
     Effect.gen(function* () {
       yield* Effect.log(`Initializing database at: ${dataDir}`);
 
-      // Ensure data directory exists and is valid
-      yield* ensureDataDir(dataDir);
+      // Ensure data directory exists and check if we need to run migrations
+      const needsMigration = yield* ensureDataDir(dataDir);
 
       const db = yield* Effect.try({
         try: () => createPGLiteDb(dataDir),
@@ -166,16 +189,25 @@ export const makeDatabaseLayer = (dataDir: string) =>
           }),
       });
 
-      yield* Effect.tryPromise({
-        try: () => migratePGLiteDb(db),
-        catch: (error) =>
-          new DatabaseMigrationError({
-            message: "Failed to run database migrations",
-            cause: error,
-          }),
-      });
+      // Only run migrations for new databases
+      if (needsMigration) {
+        yield* Effect.tryPromise({
+          try: () => migratePGLiteDb(db),
+          catch: (error) =>
+            new DatabaseMigrationError({
+              message: "Failed to run database migrations",
+              cause: error,
+            }),
+        });
+        yield* Effect.log("Database migrations complete");
+      }
 
-      yield* Effect.log("Database migrations complete");
+      yield* Effect.addFinalizer(() =>
+        Effect.tryPromise({
+          try: () => db.$client.close(),
+          catch: (error) => new Error(`Close failed: ${error}`),
+        }).pipe(Effect.ignore),
+      );
 
       return { db };
     }),

@@ -1,7 +1,7 @@
 import "dotenv/config";
-import { Effect, Logger, LogLevel, Cause } from "effect";
+import { Effect, Logger, LogLevel, Cause, Layer } from "effect";
 import { NodeRuntime } from "@effect/platform-node";
-import { AppLayer } from "./layers";
+import { AppLayer, ExportLayer } from "./layers";
 import { crawl, status, type CrawlResult, type StatusResult } from "./workflows/crawl";
 import { geocode, type GeocodeResult } from "./workflows/geocode";
 import { exportDatabase, type ExportResult } from "./workflows/export";
@@ -121,7 +121,7 @@ const printUsage = Effect.sync(() => {
   console.log("  bun run crawl [id] --no-backup  - Crawl without pre-crawl backup");
   console.log("  bun run status            - Show database status");
   console.log("  bun run geocode           - Geocode birth locations only");
-  console.log("  bun run export [output]   - Export database for browser");
+  console.log("  bun run export [output]   - Export database for browser (run after crawl)");
   console.log("  bun run backup [output]   - Create timestamped backup");
   console.log("  bun run restore [source]  - Restore from backup (latest if no path)");
   console.log("  bun run list-backups      - List available backups");
@@ -131,69 +131,97 @@ const printUsage = Effect.sync(() => {
 // Main Program
 // ============================================================================
 
+// Helper to run a command with proper layer and error handling
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const runCommand = <A, R>(effect: Effect.Effect<A, any, R>, layer: Layer.Layer<R, any, never>) =>
+  effect.pipe(
+    Effect.provide(layer),
+    Logger.withMinimumLogLevel(LogLevel.Info),
+    Effect.provide(Logger.pretty),
+    Effect.catchAllCause((cause) =>
+      Effect.sync(() => {
+        console.error("\nError:");
+        console.error(Cause.pretty(cause));
+        process.exit(1);
+      }),
+    ),
+  );
+
 const main = Effect.gen(function* () {
   yield* printHeader;
 
   const args = process.argv.slice(2);
   const command = args[0] ?? "status";
 
-  switch (command) {
-    case "crawl": {
-      const startId = args[1] && !args[1].startsWith("--") ? args[1] : undefined;
-      const skipGeocode = args.includes("--no-geocode");
-      const skipBackup = args.includes("--no-backup");
-      yield* handleCrawl(startId, skipGeocode, skipBackup);
-      break;
-    }
+  // Commands that need full AppLayer (with Database service)
+  const fullLayerCommands = ["crawl", "status", "geocode"];
 
-    case "status": {
-      yield* handleStatus;
-      break;
-    }
+  // Commands that use ExportLayer (no Database - they create their own PGLite connection)
+  const exportLayerCommands = ["export", "backup", "restore", "list-backups"];
 
-    case "geocode": {
-      yield* handleGeocode;
-      break;
-    }
+  if (fullLayerCommands.includes(command)) {
+    // These commands need the full app layer with Database service
+    const commandEffect = Effect.gen(function* () {
+      switch (command) {
+        case "crawl": {
+          const startId = args[1] && !args[1].startsWith("--") ? args[1] : undefined;
+          const skipGeocode = args.includes("--no-geocode");
+          const skipBackup = args.includes("--no-backup");
+          yield* handleCrawl(startId, skipGeocode, skipBackup);
+          break;
+        }
+        case "status":
+          yield* handleStatus;
+          break;
+        case "geocode":
+          yield* handleGeocode;
+          break;
+      }
+      console.log("\nDone.");
+    });
 
-    case "export": {
-      const outputPath = args[1];
-      yield* handleExport(outputPath);
-      break;
-    }
-
-    case "backup": {
-      const outputPath = args[1];
-      yield* handleBackup(outputPath);
-      break;
-    }
-
-    case "restore": {
-      const sourcePath = args[1];
-      yield* handleRestore(sourcePath);
-      break;
-    }
-
-    case "list-backups": {
-      yield* handleListBackups;
-      break;
-    }
-
-    default:
-      yield* printUsage;
-      return;
+    return yield* runCommand(commandEffect, AppLayer);
   }
 
-  console.log("\nDone.");
+  if (exportLayerCommands.includes(command)) {
+    // These commands create their own PGLite connection, don't need Database service
+    const commandEffect = Effect.gen(function* () {
+      switch (command) {
+        case "export": {
+          const outputPath = args[1];
+          yield* handleExport(outputPath);
+          break;
+        }
+        case "backup": {
+          const outputPath = args[1];
+          yield* handleBackup(outputPath);
+          break;
+        }
+        case "restore": {
+          const sourcePath = args[1];
+          yield* handleRestore(sourcePath);
+          break;
+        }
+        case "list-backups":
+          yield* handleListBackups;
+          break;
+      }
+      console.log("\nDone.");
+    });
+
+    return yield* runCommand(commandEffect, ExportLayer);
+  }
+
+  // Unknown command
+  yield* printUsage;
 });
 
 // ============================================================================
 // Runtime
 // ============================================================================
 
-// Provide all layers and run
+// Run main with basic logging (command-specific layers applied inside)
 const program = main.pipe(
-  Effect.provide(AppLayer),
   Logger.withMinimumLogLevel(LogLevel.Info),
   Effect.provide(Logger.pretty),
   Effect.catchAllCause((cause) =>

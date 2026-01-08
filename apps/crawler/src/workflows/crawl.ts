@@ -5,7 +5,7 @@ import { normalizeLocationKey } from "@funk-tree/db/utils/location";
 import { Config, Database, WikiTreeApi, CrawlQueue, Geocoder } from "../services";
 import type { WikiTreeProfile } from "../domain/profile";
 import { DatabaseQueryError } from "../domain/errors";
-import { exportDatabase } from "./export";
+import { exportWithConnection } from "./export";
 import { extractIds, isValidId, profileToNewPerson } from "../utils";
 
 // ============================================================================
@@ -281,7 +281,7 @@ export const crawl = (startId?: string) =>
           `Progress: ${personCount?.count ?? 0} profiles, ${stats.pending} in queue`,
         );
 
-        // Periodic export for web asset
+        // Periodic export snapshot (uses existing connection)
         const currentPersonCount = Number(personCount?.count ?? 0);
         const lastThreshold = yield* Ref.get(lastExportThreshold);
         const currentThreshold =
@@ -289,11 +289,11 @@ export const crawl = (startId?: string) =>
 
         if (currentThreshold > lastThreshold && currentThreshold > 0) {
           yield* Effect.log(
-            `Export threshold reached (${currentThreshold} persons) - exporting web asset...`,
+            `Export threshold reached (${currentThreshold} persons) - saving snapshot...`,
           );
-          yield* exportDatabase().pipe(
+          yield* exportWithConnection(db).pipe(
             Effect.catchAll((error) =>
-              Effect.log(`Export failed (will retry at next threshold): ${error}`),
+              Effect.log(`Snapshot failed (will retry at next threshold): ${error}`),
             ),
           );
           yield* Ref.set(lastExportThreshold, currentThreshold);
@@ -319,10 +319,10 @@ export const crawl = (startId?: string) =>
     yield* Effect.log(`API requests: ${requestCount}`);
     yield* Effect.log(`Errors: ${errors}`);
 
-    // Final export on completion
-    yield* Effect.log("Exporting final web asset...");
-    yield* exportDatabase().pipe(
-      Effect.catchAll((error) => Effect.log(`Final export failed: ${error}`)),
+    // Final export snapshot
+    yield* Effect.log("Saving final snapshot...");
+    yield* exportWithConnection(db).pipe(
+      Effect.catchAll((error) => Effect.log(`Final snapshot failed: ${error}`)),
     );
 
     return {
