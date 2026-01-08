@@ -16,11 +16,11 @@ Found **5 regex usages** across **4 files**, with **2 unique patterns**:
 
 Used to extract a 4-digit year from date strings like `"1750"`, `"1750-03-15"`, or `"about 1750"`.
 
-| File | Line | Code |
-|------|------|------|
-| `packages/map-viz/src/data/transform.ts` | 9 | `dateString.match(/(\d{4})/)` |
-| `apps/web/src/hooks/local-queries.ts` | 230 | `row.birthDate?.match(/^(\d{4})/)` |
-| `packages/api/src/routers/genealogy.ts` | 310 | `row.birthDate?.match(/^(\d{4})/)` |
+| File                                     | Line | Code                               |
+| ---------------------------------------- | ---- | ---------------------------------- |
+| `packages/map-viz/src/data/transform.ts` | 9    | `dateString.match(/(\d{4})/)`      |
+| `apps/web/src/hooks/local-queries.ts`    | 230  | `row.birthDate?.match(/^(\d{4})/)` |
+| `packages/api/src/routers/genealogy.ts`  | 310  | `row.birthDate?.match(/^(\d{4})/)` |
 
 **Issue:** This pattern is duplicated in 3 places. The `map-viz` package has a `parseYear()` utility that could be shared.
 
@@ -28,13 +28,14 @@ Used to extract a 4-digit year from date strings like `"1750"`, `"1750-03-15"`, 
 
 **File:** `packages/db/src/utils/location.ts` (lines 26-32)
 
-| Pattern | Purpose |
-|---------|---------|
-| `/\s+/g` | Collapse multiple spaces to single space |
-| `/\s*,\s*/g` | Standardize comma spacing to `", "` |
-| `/[.,;]+$/` | Remove trailing punctuation |
+| Pattern      | Purpose                                  |
+| ------------ | ---------------------------------------- |
+| `/\s+/g`     | Collapse multiple spaces to single space |
+| `/\s*,\s*/g` | Standardize comma spacing to `", "`      |
+| `/[.,;]+$/`  | Remove trailing punctuation              |
 
 **Current Implementation:**
+
 ```typescript
 export function normalizeLocationKey(location: string | null | undefined): string | null {
   if (!location) return null;
@@ -201,12 +202,12 @@ export function normalizeLocationKey(location: string | null | undefined): strin
 
 ## Benefits
 
-| Benefit | Description |
-|---------|-------------|
-| **DRY** | Eliminates 3 duplicate `parseYear` implementations |
-| **Type Safety** | arkregex provides compile-time validation of regex patterns |
-| **Testability** | Centralized utilities are easier to test comprehensively |
-| **Maintainability** | Single source of truth for common patterns |
+| Benefit             | Description                                                    |
+| ------------------- | -------------------------------------------------------------- |
+| **DRY**             | Eliminates 3 duplicate `parseYear` implementations             |
+| **Type Safety**     | arkregex provides compile-time validation of regex patterns    |
+| **Testability**     | Centralized utilities are easier to test comprehensively       |
+| **Maintainability** | Single source of truth for common patterns                     |
 | **Discoverability** | Developers can find existing patterns before creating new ones |
 
 ## Considerations
@@ -218,6 +219,7 @@ export function normalizeLocationKey(location: string | null | undefined): strin
 ## Recommendation
 
 **Proceed with Phase 1 (MVP)** focusing on:
+
 1. The `parseYear()` utility (clear value - eliminates 3 duplicates)
 2. Export patterns as constants for reuse
 3. Keep `normalizeLocationKey()` in `@funk-tree/db` for now, but import patterns from `@funk-tree/regex`

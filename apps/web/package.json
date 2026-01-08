@@ -15,6 +15,7 @@
     "@funk-tree/db": "workspace:*",
     "@funk-tree/env": "workspace:*",
     "@funk-tree/map-viz": "workspace:*",
+    "@funk-tree/regex": "workspace:*",
     "@funk-tree/tree-viz": "workspace:*",
     "@orpc/client": "catalog:",
     "@orpc/server": "catalog:",

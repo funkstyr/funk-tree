@@ -1,14 +1,8 @@
 import type { MapPoint, MapPerson } from "../types";
+import { parseYear } from "@funk-tree/regex";
 
-/**
- * Parse a date string to extract the year
- * Handles formats like "1750", "1750-03-15", "about 1750"
- */
-export function parseYear(dateString: string | null | undefined): number | null {
-  if (!dateString) return null;
-  const match = dateString.match(/(\d{4})/);
-  return match ? parseInt(match[1], 10) : null;
-}
+// Re-export for backwards compatibility
+export { parseYear };
 
 interface RawPersonWithLocation {
   wikiId: string;

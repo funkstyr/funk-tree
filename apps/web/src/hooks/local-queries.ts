@@ -7,6 +7,7 @@
 import type { BrowserDatabase } from "@funk-tree/db/browser";
 
 import { persons, relationships, locations } from "@funk-tree/db/schema";
+import { parseYear } from "@funk-tree/regex";
 import { eq, or, ilike, and, sql, isNotNull } from "drizzle-orm";
 
 export type Person = typeof persons.$inferSelect;
@@ -226,11 +227,10 @@ export async function getMapData(
     .where(and(isNotNull(locations.latitude), isNotNull(locations.longitude)));
 
   // Parse years and filter if needed
-  const personsWithYears = result.map((row) => {
-    const yearMatch = row.birthDate?.match(/^(\d{4})/);
-    const birthYear = yearMatch?.[1] ? parseInt(yearMatch[1], 10) : null;
-    return { ...row, birthYear };
-  });
+  const personsWithYears = result.map((row) => ({
+    ...row,
+    birthYear: parseYear(row.birthDate),
+  }));
 
   // Apply year filters
   let filtered = personsWithYears;

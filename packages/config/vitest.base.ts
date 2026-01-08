@@ -1,19 +1,14 @@
-import { defineConfig, type UserConfig } from "vitest/config";
+import { defineConfig } from "vitest/config";
 
 /**
- * Base vitest configuration shared across all packages.
+ * Base test includes shared across all packages.
  */
-export const baseConfig: UserConfig["test"] = {
-  globals: true,
-  include: ["src/**/*.test.{ts,tsx}"],
-  passWithNoTests: true,
-  coverage: {
-    provider: "v8",
-    reporter: ["text", "json", "json-summary", "html"],
-    reportsDirectory: "coverage",
-    exclude: ["src/**/*.stories.{ts,tsx}", "src/test/**", "src/**/index.ts"],
-  },
-};
+const baseInclude = ["src/**/*.test.{ts,tsx}"];
+
+/**
+ * Base coverage excludes shared across all packages.
+ */
+const baseCoverageExclude = ["src/**/*.stories.{ts,tsx}", "src/test/**", "src/**/index.ts"];
 
 export interface CreateConfigOptions {
   /** Package name for vitest's test.name */
@@ -32,14 +27,17 @@ export interface CreateConfigOptions {
 export function createServerConfig(options: CreateConfigOptions) {
   return defineConfig({
     test: {
-      ...baseConfig,
+      globals: true,
+      passWithNoTests: true,
       name: options.name,
       environment: "node",
-      include: [...(baseConfig.include ?? []), ...(options.testInclude ?? [])],
+      include: [...baseInclude, ...(options.testInclude ?? [])],
       coverage: {
-        ...baseConfig.coverage,
+        provider: "v8",
+        reporter: ["text", "json", "json-summary", "html"],
+        reportsDirectory: "coverage",
         include: ["src/**/*.ts", ...(options.coverageInclude ?? [])],
-        exclude: [...(baseConfig.coverage?.exclude ?? []), ...(options.coverageExclude ?? [])],
+        exclude: [...baseCoverageExclude, ...(options.coverageExclude ?? [])],
       },
     },
   });
@@ -51,14 +49,17 @@ export function createServerConfig(options: CreateConfigOptions) {
 export function createUIConfig(options: CreateConfigOptions) {
   return defineConfig({
     test: {
-      ...baseConfig,
+      globals: true,
+      passWithNoTests: true,
       name: options.name,
       environment: "jsdom",
-      include: [...(baseConfig.include ?? []), ...(options.testInclude ?? [])],
+      include: [...baseInclude, ...(options.testInclude ?? [])],
       coverage: {
-        ...baseConfig.coverage,
+        provider: "v8",
+        reporter: ["text", "json", "json-summary", "html"],
+        reportsDirectory: "coverage",
         include: ["src/**/*.{ts,tsx}", ...(options.coverageInclude ?? [])],
-        exclude: [...(baseConfig.coverage?.exclude ?? []), ...(options.coverageExclude ?? [])],
+        exclude: [...baseCoverageExclude, ...(options.coverageExclude ?? [])],
       },
     },
   });

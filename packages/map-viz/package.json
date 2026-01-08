@@ -10,6 +10,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@funk-tree/regex": "workspace:*",
     "d3-geo": "^3.1.0",
     "react-simple-maps": "^3.0.0"
   },

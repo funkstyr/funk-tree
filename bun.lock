@@ -77,6 +77,7 @@
         "@funk-tree/db": "workspace:*",
         "@funk-tree/env": "workspace:*",
         "@funk-tree/map-viz": "workspace:*",
+        "@funk-tree/regex": "workspace:*",
         "@funk-tree/tree-viz": "workspace:*",
         "@orpc/client": "catalog:",
         "@orpc/server": "catalog:",
@@ -126,11 +127,14 @@
         "@funk-tree/auth": "workspace:*",
         "@funk-tree/db": "workspace:*",
         "@funk-tree/env": "workspace:*",
+        "@funk-tree/regex": "workspace:*",
         "@orpc/client": "catalog:",
         "@orpc/openapi": "catalog:",
         "@orpc/server": "catalog:",
         "@orpc/zod": "catalog:",
         "dotenv": "catalog:",
+        "drizzle-orm": "^0.45.1",
+        "hono": "^4.8.2",
         "zod": "catalog:",
       },
       "devDependencies": {
@@ -198,6 +202,7 @@
       "name": "@funk-tree/map-viz",
       "version": "0.1.0",
       "dependencies": {
+        "@funk-tree/regex": "workspace:*",
         "d3-geo": "^3.1.0",
         "react-simple-maps": "^3.0.0",
       },
@@ -211,6 +216,18 @@
       "peerDependencies": {
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
+      },
+    },
+    "packages/regex": {
+      "name": "@funk-tree/regex",
+      "dependencies": {
+        "arkregex": "^0.0.5",
+      },
+      "devDependencies": {
+        "@funk-tree/config": "workspace:*",
+        "@vitest/coverage-v8": "catalog:",
+        "typescript": "catalog:",
+        "vitest": "catalog:",
       },
     },
     "packages/tree-viz": {
@@ -250,6 +267,8 @@
   },
   "packages": {
     "@antfu/ni": ["@antfu/ni@25.0.0", "", { "dependencies": { "ansis": "^4.0.0", "fzf": "^0.5.2", "package-manager-detector": "^1.3.0", "tinyexec": "^1.0.1" }, "bin": { "na": "bin/na.mjs", "ni": "bin/ni.mjs", "nr": "bin/nr.mjs", "nci": "bin/nci.mjs", "nlx": "bin/nlx.mjs", "nun": "bin/nun.mjs", "nup": "bin/nup.mjs" } }, "sha512-9q/yCljni37pkMr4sPrI3G4jqdIk074+iukc5aFJl7kmDCCsiJrbZ6zKxnES1Gwg+i9RcDZwvktl23puGslmvA=="],
+
+    "@ark/util": ["@ark/util@0.56.0", "", {}, "sha512-BghfRC8b9pNs3vBoDJhcta0/c1J1rsoS1+HgVUreMFPdhz/CRAKReAu57YEllNaSy98rWAdY1gE+gFup7OXpgA=="],
 
     "@asamuzakjp/css-color": ["@asamuzakjp/css-color@3.2.0", "", { "dependencies": { "@csstools/css-calc": "^2.1.3", "@csstools/css-color-parser": "^3.0.9", "@csstools/css-parser-algorithms": "^3.0.4", "@csstools/css-tokenizer": "^3.0.3", "lru-cache": "^10.4.3" } }, "sha512-K1A6z8tS3XsmCMM86xoWdn7Fkdn9m6RSVtocUrJYIwZnFVkng/PvkEoWtOWmP+Scc6saYWHWZYbndEEXxl24jw=="],
 
@@ -438,6 +457,8 @@
     "@funk-tree/env": ["@funk-tree/env@workspace:packages/env"],
 
     "@funk-tree/map-viz": ["@funk-tree/map-viz@workspace:packages/map-viz"],
+
+    "@funk-tree/regex": ["@funk-tree/regex@workspace:packages/regex"],
 
     "@funk-tree/tree-viz": ["@funk-tree/tree-viz@workspace:packages/tree-viz"],
 
@@ -878,6 +899,8 @@
     "argparse": ["argparse@2.0.1", "", {}, "sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q=="],
 
     "aria-query": ["aria-query@5.3.0", "", { "dependencies": { "dequal": "^2.0.3" } }, "sha512-b0P0sZPKtyu8HkeRAfCq0IfURZK+SuwMjY1UXGBU27wpAiTwQAIlq56IbIO+ytk/JjS1fMR14ee5WBBfKi5J6A=="],
+
+    "arkregex": ["arkregex@0.0.5", "", { "dependencies": { "@ark/util": "0.56.0" } }, "sha512-ncYjBdLlh5/QnVsAA8De16Tc9EqmYM7y/WU9j+236KcyYNUXogpz3sC4ATIZYzzLxwI+0sEOaQLEmLmRleaEXw=="],
 
     "assertion-error": ["assertion-error@2.0.1", "", {}, "sha512-Izi8RQcffqCeNVgFigKli1ssklIbpHnCYc6AknXGYoB6grJqyeby7jv12JUQgmTAnIDnbck1uxksT4dzN3PWBA=="],
 

@@ -1,5 +1,6 @@
 import { db } from "@funk-tree/db";
 import { persons, relationships, locations } from "@funk-tree/db/schema";
+import { parseYear } from "@funk-tree/regex";
 import { z } from "zod";
 import { and, eq, ilike, or, sql, isNotNull } from "drizzle-orm";
 
@@ -306,11 +307,10 @@ export const getMapData = publicProcedure
         .where(and(isNotNull(locations.latitude), isNotNull(locations.longitude)));
 
       // Parse years and filter if needed
-      const personsWithYears = result.map((row) => {
-        const yearMatch = row.birthDate?.match(/^(\d{4})/);
-        const birthYear = yearMatch?.[1] ? parseInt(yearMatch[1], 10) : null;
-        return { ...row, birthYear };
-      });
+      const personsWithYears = result.map((row) => ({
+        ...row,
+        birthYear: parseYear(row.birthDate),
+      }));
 
       // Apply year filters
       let filtered = personsWithYears;
