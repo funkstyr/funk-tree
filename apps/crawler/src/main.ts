@@ -5,6 +5,14 @@ import { AppLayer } from "./layers";
 import { crawl, status, type CrawlResult, type StatusResult } from "./workflows/crawl";
 import { geocode, type GeocodeResult } from "./workflows/geocode";
 import { exportDatabase, type ExportResult } from "./workflows/export";
+import {
+  backupDatabase,
+  restoreDatabase,
+  listBackups,
+  quickBackup,
+  type BackupResult,
+  type RestoreResult,
+} from "./workflows/backup";
 
 // ============================================================================
 // CLI Header
@@ -22,8 +30,19 @@ const printHeader = Effect.sync(() => {
 // Command Handlers
 // ============================================================================
 
-const handleCrawl = (startId?: string, skipGeocode = false) =>
+const handleCrawl = (startId?: string, skipGeocode = false, skipBackup = false) =>
   Effect.gen(function* () {
+    // Auto-backup before crawling unless --no-backup flag
+    if (!skipBackup) {
+      yield* quickBackup.pipe(
+        Effect.catchAll((error) =>
+          Effect.gen(function* () {
+            yield* Effect.logWarning(`Pre-crawl backup skipped: ${error}`);
+          }),
+        ),
+      );
+    }
+
     const result: CrawlResult = yield* crawl(startId);
 
     // Auto-geocode after crawling unless --no-geocode flag
@@ -64,13 +83,48 @@ const handleExport = (outputPath?: string) =>
     return result;
   });
 
+const handleBackup = (outputPath?: string) =>
+  Effect.gen(function* () {
+    const result: BackupResult = yield* backupDatabase(outputPath);
+    return result;
+  });
+
+const handleRestore = (sourcePath?: string) =>
+  Effect.gen(function* () {
+    const result: RestoreResult = yield* restoreDatabase(sourcePath);
+    return result;
+  });
+
+const handleListBackups = Effect.gen(function* () {
+  const backups = yield* listBackups;
+
+  if (backups.length === 0) {
+    console.log("No backups found.");
+    return;
+  }
+
+  console.log("\nAvailable backups:");
+  console.log("─".repeat(70));
+  for (const backup of backups) {
+    console.log(`  ${backup.filename}`);
+    console.log(`    Timestamp: ${backup.timestamp}`);
+    console.log(`    Size: ${backup.sizeMB} MB`);
+    console.log();
+  }
+  console.log(`Total: ${backups.length} backup(s)`);
+});
+
 const printUsage = Effect.sync(() => {
   console.log("Usage:");
-  console.log("  bun run crawl [start_id]  - Start/continue crawling (auto-geocodes after)");
+  console.log("  bun run crawl [start_id]  - Start/continue crawling (auto-backup + geocode)");
   console.log("  bun run crawl [id] --no-geocode - Crawl without geocoding");
+  console.log("  bun run crawl [id] --no-backup  - Crawl without pre-crawl backup");
   console.log("  bun run status            - Show database status");
   console.log("  bun run geocode           - Geocode birth locations only");
   console.log("  bun run export [output]   - Export database for browser");
+  console.log("  bun run backup [output]   - Create timestamped backup");
+  console.log("  bun run restore [source]  - Restore from backup (latest if no path)");
+  console.log("  bun run list-backups      - List available backups");
 });
 
 // ============================================================================
@@ -87,7 +141,8 @@ const main = Effect.gen(function* () {
     case "crawl": {
       const startId = args[1] && !args[1].startsWith("--") ? args[1] : undefined;
       const skipGeocode = args.includes("--no-geocode");
-      yield* handleCrawl(startId, skipGeocode);
+      const skipBackup = args.includes("--no-backup");
+      yield* handleCrawl(startId, skipGeocode, skipBackup);
       break;
     }
 
@@ -104,6 +159,23 @@ const main = Effect.gen(function* () {
     case "export": {
       const outputPath = args[1];
       yield* handleExport(outputPath);
+      break;
+    }
+
+    case "backup": {
+      const outputPath = args[1];
+      yield* handleBackup(outputPath);
+      break;
+    }
+
+    case "restore": {
+      const sourcePath = args[1];
+      yield* handleRestore(sourcePath);
+      break;
+    }
+
+    case "list-backups": {
+      yield* handleListBackups;
       break;
     }
 

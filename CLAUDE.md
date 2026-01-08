@@ -24,9 +24,14 @@ bun run db:generate      # Generate migrations
 bun run db:migrate       # Run migrations
 
 # Crawler
-bun run crawl            # Run WikiTree crawler
+bun run crawl            # Run WikiTree crawler (auto-backup + geocode)
 bun run crawl:migrate    # Migrate crawler data
 bun run crawl:status     # Check crawl status
+
+# Database Backup/Restore
+bun run db:backup        # Create timestamped backup snapshot
+bun run db:restore       # Restore from latest backup (or specify path)
+bun run db:list-backups  # List available backups
 
 # Testing
 bun run test             # Run all tests
