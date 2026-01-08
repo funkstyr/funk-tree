@@ -32,13 +32,13 @@ export interface CrawlerConfig {
 const RawConfigSchema = type({
   dataDir: "string > 0",
   startId: /^[A-Za-z]+-\d+$/, // WikiTree ID format: Name-123
-  requestDelayMs: "0 <= integer <= 60000",
-  maxRetries: "0 <= integer <= 10",
+  requestDelayMs: "number >= 0",
+  maxRetries: "number >= 0",
   mapboxToken: "string | undefined",
   geocodeAfterCrawl: "boolean",
   crawlParents: "boolean",
-  saveInterval: "1 <= integer <= 1000",
-  exportInterval: "1 <= integer <= 10000",
+  saveInterval: "number >= 1",
+  exportInterval: "number >= 1",
   paths: {
     backupDir: "string > 0",
     exportFile: "string > 0",

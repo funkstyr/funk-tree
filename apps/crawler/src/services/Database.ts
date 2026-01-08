@@ -24,6 +24,13 @@ export class Database extends Context.Tag("Database")<Database, DatabaseService>
 // Directory Validation
 // ============================================================================
 
+// Check if a path exists (file or directory)
+const pathExists = (path: string) =>
+  Effect.tryPromise({
+    try: () => access(path).then(() => true),
+    catch: () => new Error("not found"),
+  }).pipe(Effect.catchAll(() => Effect.succeed(false)));
+
 const ensureDataDir = (dataDir: string) =>
   Effect.gen(function* () {
     // Skip for in-memory or IndexedDB
@@ -32,10 +39,7 @@ const ensureDataDir = (dataDir: string) =>
     }
 
     // Check if directory exists
-    const exists = yield* Effect.tryPromise({
-      try: () => access(dataDir).then(() => true),
-      catch: () => false,
-    });
+    const exists = yield* pathExists(dataDir);
 
     if (!exists) {
       yield* Effect.log(`Creating data directory: ${dataDir}`);
@@ -53,8 +57,8 @@ const ensureDataDir = (dataDir: string) =>
     // If exists, verify it's a valid PGLite directory or empty
     const files = yield* Effect.tryPromise({
       try: () => readdir(dataDir),
-      catch: () => [] as string[],
-    });
+      catch: () => new Error("read failed"),
+    }).pipe(Effect.catchAll(() => Effect.succeed([] as string[])));
 
     const isPGLiteDir = files.some(
       (f) => f.startsWith("pg_") || f === "PG_VERSION" || f === "base",
