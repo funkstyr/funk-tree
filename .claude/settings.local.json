@@ -9,7 +9,11 @@
       "WebFetch(domain:www.familysearch.org)",
       "WebSearch",
       "WebFetch(domain:www.geni.com)",
-      "WebFetch(domain:api.pixijs.io)"
+      "WebFetch(domain:api.pixijs.io)",
+      "Bash(bunx oxlint:*)",
+      "Bash(bunx tsc:*)",
+      "Bash(time bunx oxlint:*)",
+      "Bash(bun run test)"
     ]
   }
 }

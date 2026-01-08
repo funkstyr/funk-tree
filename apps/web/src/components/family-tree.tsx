@@ -31,7 +31,7 @@ export function FamilyTree({ data, rootWikiId, onPersonClick }: FamilyTreeProps)
       }
 
       // Find the original DB person to show full details in PersonCard
-      const dbPerson = data.find((p) => p.wiki_id === vizPerson.wikiId);
+      const dbPerson = data.find((p) => p.wikiId === vizPerson.wikiId);
       if (dbPerson) {
         setSelectedPerson(dbPerson);
         onPersonClick?.(vizPerson.wikiId);

@@ -143,7 +143,7 @@ function SearchPage() {
                 {isFetching && <span className="text-blue-400">Loading...</span>}
               </div>
 
-              {data?.results.map((person: Person) => (
+              {data?.results.map((person) => (
                 <PersonResult key={person.id} person={person} />
               ))}
 
@@ -190,24 +190,24 @@ function SearchPage() {
 function PersonResult({ person }: { person: Person }) {
   const displayName =
     person.name ||
-    [person.first_name, person.middle_name, person.last_name_birth].filter(Boolean).join(" ") ||
-    person.wiki_id;
+    [person.firstName, person.middleName, person.lastNameBirth].filter(Boolean).join(" ") ||
+    person.wikiId;
 
-  const lifespan = [person.birth_date, person.death_date].filter(Boolean).join(" - ");
+  const lifespan = [person.birthDate, person.deathDate].filter(Boolean).join(" - ");
 
   return (
-    <Link to="/tree/$wikiId" params={{ wikiId: person.wiki_id }}>
+    <Link to="/tree/$wikiId" params={{ wikiId: person.wikiId }}>
       <Card className="transition-colors hover:bg-gray-800/50">
         <CardContent className="p-4">
           <div className="flex items-start justify-between">
             <div>
               <h3 className="font-medium text-gray-100">{displayName}</h3>
               {lifespan && <p className="text-sm text-gray-400">{lifespan}</p>}
-              {person.birth_location && (
-                <p className="text-sm text-gray-500">Born: {person.birth_location}</p>
+              {person.birthLocation && (
+                <p className="text-sm text-gray-500">Born: {person.birthLocation}</p>
               )}
-              {person.death_location && (
-                <p className="text-sm text-gray-500">Died: {person.death_location}</p>
+              {person.deathLocation && (
+                <p className="text-sm text-gray-500">Died: {person.deathLocation}</p>
               )}
             </div>
             <div className="text-right">

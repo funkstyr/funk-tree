@@ -10,9 +10,9 @@ bun run dev:server       # Server only
 
 # Build & Check
 bun run build            # Build all
-bun run check-types      # TypeScript (per-package via turbo)
-bun run check            # oxlint + oxfmt
-bun run check:type-aware # oxlint with type information (alpha)
+bun run check            # oxlint (type-aware + type-check) + oxfmt
+bun run check:lint-only  # oxlint (no type-check) + oxfmt
+bun run check-types      # TypeScript via turbo (fallback)
 
 # Database
 bun run db:start         # Docker PostgreSQL
@@ -41,13 +41,16 @@ bun run test:coverage    # Coverage report
 
 ## Post-Change Verification
 
-After changes, run: `bun run check && bun run check-types`
+After changes, run: `bun run check`
+
+This single command runs type-aware linting AND type-checking via oxlint + tsgolint (~6s).
 
 | Lint Issue         | Fix                       |
 | ------------------ | ------------------------- |
 | Unused imports     | Remove                    |
 | Unused vars        | Prefix with `_` or remove |
 | Non-null assertion | Use `?.` or fallback      |
+| Floating promises  | Add `void` or `.catch()`  |
 
 ### Dev Server Verification (Major Changes)
 

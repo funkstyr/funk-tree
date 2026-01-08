@@ -130,7 +130,7 @@ export function FamilyTreeWithWorker({
       }
     };
 
-    doLayout();
+    void doLayout();
   }, [persons, rootId, useWorker, workerReady, computeLayoutInWorker]);
 
   // Refit when dimensions change

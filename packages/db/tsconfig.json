@@ -1,6 +1,7 @@
 {
   "extends": "@funk-tree/config/tsconfig.base.json",
   "compilerOptions": {
+    "lib": ["ESNext", "DOM"],
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,

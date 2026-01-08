@@ -1,0 +1,12 @@
+{
+  // TypeScript Native Preview (10x faster IntelliSense)
+  "typescript.experimental.useTsgo": true,
+
+  // oxlint type-aware linting
+  "oxc.typeAware": true,
+
+  // Auto-fix on save
+  "editor.codeActionsOnSave": {
+    "source.fixAll.oxc": "explicit"
+  }
+}

@@ -5,23 +5,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export interface Person {
   id: number;
-  wiki_id: string;
-  wiki_numeric_id?: number | null;
+  wikiId: string;
+  wikiNumericId?: number | null;
   name?: string | null;
-  first_name?: string | null;
-  middle_name?: string | null;
-  last_name_birth?: string | null;
-  last_name_current?: string | null;
+  firstName?: string | null;
+  middleName?: string | null;
+  lastNameBirth?: string | null;
+  lastNameCurrent?: string | null;
   suffix?: string | null;
   gender?: string | null;
-  birth_date?: string | null;
-  death_date?: string | null;
-  birth_location?: string | null;
-  death_location?: string | null;
-  is_living?: boolean | null;
+  birthDate?: string | null;
+  deathDate?: string | null;
+  birthLocation?: string | null;
+  deathLocation?: string | null;
+  isLiving?: boolean | null;
   generation?: number | null;
-  father_wiki_id?: string | null;
-  mother_wiki_id?: string | null;
+  fatherWikiId?: string | null;
+  motherWikiId?: string | null;
 }
 
 interface PersonCardProps {
@@ -33,10 +33,10 @@ interface PersonCardProps {
 export function PersonCard({ person, onClose, onNavigate }: PersonCardProps) {
   const displayName =
     person.name ||
-    [person.first_name, person.middle_name, person.last_name_birth].filter(Boolean).join(" ") ||
-    person.wiki_id;
+    [person.firstName, person.middleName, person.lastNameBirth].filter(Boolean).join(" ") ||
+    person.wikiId;
 
-  const lifespan = [person.birth_date, person.death_date].filter(Boolean).join(" - ");
+  const lifespan = [person.birthDate, person.deathDate].filter(Boolean).join(" - ");
 
   return (
     <Card className="w-80 bg-gray-900 border-gray-700">
@@ -64,20 +64,20 @@ export function PersonCard({ person, onClose, onNavigate }: PersonCardProps) {
           </div>
         )}
 
-        {person.birth_location && (
+        {person.birthLocation && (
           <div className="flex justify-between">
             <span className="text-gray-500">Birth</span>
             <span className="text-gray-300 text-right max-w-48 truncate">
-              {person.birth_location}
+              {person.birthLocation}
             </span>
           </div>
         )}
 
-        {person.death_location && (
+        {person.deathLocation && (
           <div className="flex justify-between">
             <span className="text-gray-500">Death</span>
             <span className="text-gray-300 text-right max-w-48 truncate">
-              {person.death_location}
+              {person.deathLocation}
             </span>
           </div>
         )}
@@ -90,22 +90,22 @@ export function PersonCard({ person, onClose, onNavigate }: PersonCardProps) {
         )}
 
         <div className="flex gap-2 pt-2">
-          {person.father_wiki_id && onNavigate && (
+          {person.fatherWikiId && onNavigate && (
             <Button
               variant="outline"
               size="sm"
               className="flex-1 text-xs"
-              onClick={() => onNavigate(person.father_wiki_id!)}
+              onClick={() => onNavigate(person.fatherWikiId!)}
             >
               View Father
             </Button>
           )}
-          {person.mother_wiki_id && onNavigate && (
+          {person.motherWikiId && onNavigate && (
             <Button
               variant="outline"
               size="sm"
               className="flex-1 text-xs"
-              onClick={() => onNavigate(person.mother_wiki_id!)}
+              onClick={() => onNavigate(person.motherWikiId!)}
             >
               View Mother
             </Button>
@@ -113,7 +113,7 @@ export function PersonCard({ person, onClose, onNavigate }: PersonCardProps) {
         </div>
 
         <a
-          href={`https://www.wikitree.com/wiki/${person.wiki_id}`}
+          href={`https://www.wikitree.com/wiki/${person.wikiId}`}
           target="_blank"
           rel="noopener noreferrer"
           className="block text-center text-xs text-blue-400 hover:text-blue-300"
