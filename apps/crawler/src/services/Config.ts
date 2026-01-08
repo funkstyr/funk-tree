@@ -13,6 +13,7 @@ export interface CrawlerConfig {
   readonly geocodeAfterCrawl: boolean;
   readonly crawlParents: boolean;
   readonly saveInterval: number;
+  readonly exportInterval: number;
 }
 
 // ============================================================================
@@ -38,6 +39,7 @@ export const ConfigLive = Layer.sync(Config, () => {
     geocodeAfterCrawl: process.env.CRAWLER_GEOCODE_AFTER_CRAWL !== "false",
     crawlParents: process.env.CRAWLER_CRAWL_PARENTS === "true",
     saveInterval: Number(process.env.CRAWLER_SAVE_INTERVAL ?? "25"),
+    exportInterval: Number(process.env.CRAWLER_EXPORT_INTERVAL ?? "500"),
   };
 });
 
@@ -51,6 +53,7 @@ export const ConfigTest = Layer.succeed(Config, {
   geocodeAfterCrawl: false,
   crawlParents: false,
   saveInterval: 10,
+  exportInterval: 100,
 });
 
 // Create a custom config layer
@@ -66,6 +69,7 @@ export const makeConfigLayer = (overrides: Partial<CrawlerConfig>) =>
       geocodeAfterCrawl: process.env.CRAWLER_GEOCODE_AFTER_CRAWL !== "false",
       crawlParents: process.env.CRAWLER_CRAWL_PARENTS === "true",
       saveInterval: Number(process.env.CRAWLER_SAVE_INTERVAL ?? "25"),
+      exportInterval: Number(process.env.CRAWLER_EXPORT_INTERVAL ?? "500"),
     };
 
     return { ...base, ...overrides };

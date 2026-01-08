@@ -5,6 +5,7 @@ import { normalizeLocationKey } from "@funk-tree/db/utils/location";
 import { Config, Database, WikiTreeApi, CrawlQueue, Geocoder } from "../services";
 import type { WikiTreeProfile } from "../domain/profile";
 import { DatabaseQueryError } from "../domain/errors";
+import { exportDatabase } from "./export";
 
 // ============================================================================
 // Utility Functions (Pure)
@@ -262,6 +263,7 @@ export const crawl = (startId?: string) =>
 
     const effectiveStartId = startId ?? config.startId;
     const errorCount = yield* Ref.make(0);
+    const lastExportThreshold = yield* Ref.make(0);
 
     yield* Effect.log(`Starting crawl from ${effectiveStartId}`);
     yield* Effect.log("Will crawl until queue is empty");
@@ -339,6 +341,24 @@ export const crawl = (startId?: string) =>
         yield* Effect.log(
           `Progress: ${personCount?.count ?? 0} profiles, ${stats.pending} in queue`,
         );
+
+        // Periodic export for web asset
+        const currentPersonCount = Number(personCount?.count ?? 0);
+        const lastThreshold = yield* Ref.get(lastExportThreshold);
+        const currentThreshold =
+          Math.floor(currentPersonCount / config.exportInterval) * config.exportInterval;
+
+        if (currentThreshold > lastThreshold && currentThreshold > 0) {
+          yield* Effect.log(
+            `Export threshold reached (${currentThreshold} persons) - exporting web asset...`,
+          );
+          yield* exportDatabase().pipe(
+            Effect.catchAll((error) =>
+              Effect.log(`Export failed (will retry at next threshold): ${error}`),
+            ),
+          );
+          yield* Ref.set(lastExportThreshold, currentThreshold);
+        }
       }
     }
 
@@ -359,6 +379,12 @@ export const crawl = (startId?: string) =>
     yield* Effect.log(`Total profiles: ${finalPersonCount?.count ?? 0}`);
     yield* Effect.log(`API requests: ${requestCount}`);
     yield* Effect.log(`Errors: ${errors}`);
+
+    // Final export on completion
+    yield* Effect.log("Exporting final web asset...");
+    yield* exportDatabase().pipe(
+      Effect.catchAll((error) => Effect.log(`Final export failed: ${error}`)),
+    );
 
     return {
       totalPersons: Number(finalPersonCount?.count ?? 0),
