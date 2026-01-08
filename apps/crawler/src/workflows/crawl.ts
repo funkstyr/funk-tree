@@ -1,8 +1,8 @@
 import { Effect, Ref } from "effect";
 import { eq, count } from "drizzle-orm";
-import { persons, type NewPerson } from "@funk-tree/db/schema";
+import { persons, locations, type NewPerson, type NewLocation } from "@funk-tree/db/schema";
 import { normalizeLocationKey } from "@funk-tree/db/utils/location";
-import { Config, Database, WikiTreeApi, CrawlQueue } from "../services";
+import { Config, Database, WikiTreeApi, CrawlQueue, Geocoder } from "../services";
 import type { WikiTreeProfile } from "../domain/profile";
 import { DatabaseQueryError } from "../domain/errors";
 
@@ -80,6 +80,66 @@ function profileToNewPerson(profile: WikiTreeProfile): NewPerson | null {
 }
 
 // ============================================================================
+// Inline Geocoding
+// ============================================================================
+
+/**
+ * Geocodes a location if not already in the database.
+ * Silently skips if location is empty, already geocoded, or geocoding fails.
+ */
+const geocodeLocationIfNeeded = (rawLocation: string | null) =>
+  Effect.gen(function* () {
+    if (!rawLocation || rawLocation.trim() === "") return;
+
+    const { db } = yield* Database;
+    const geocoder = yield* Geocoder;
+
+    // Check if geocoder is available
+    const available = yield* geocoder.isAvailable;
+    if (!available) return;
+
+    // Check if already geocoded
+    const existing = yield* Effect.tryPromise({
+      try: () =>
+        db
+          .select({ id: locations.id })
+          .from(locations)
+          .where(eq(locations.rawLocation, rawLocation))
+          .limit(1),
+      catch: () => null,
+    });
+
+    if (existing && existing.length > 0) return;
+
+    // Geocode the location
+    const result = yield* geocoder
+      .geocode(rawLocation)
+      .pipe(Effect.catchAll(() => Effect.succeed(null)));
+
+    if (!result) return;
+
+    // Save to locations table
+    const newLocation: NewLocation = {
+      rawLocation,
+      locationKey: normalizeLocationKey(rawLocation),
+      latitude: result.latitude,
+      longitude: result.longitude,
+      normalizedName: result.normalizedName,
+      country: result.country,
+      state: result.state,
+      city: result.city,
+      geocodedAt: new Date(),
+    };
+
+    yield* Effect.tryPromise({
+      try: () => db.insert(locations).values(newLocation).onConflictDoNothing(),
+      catch: () => null, // Ignore insert errors (e.g., race condition duplicates)
+    });
+
+    yield* Effect.log(`Geocoded: ${rawLocation} → ${result.state ?? result.country ?? "found"}`);
+  });
+
+// ============================================================================
 // Crawl Operations
 // ============================================================================
 
@@ -155,6 +215,11 @@ const queueRelatives = (profile: WikiTreeProfile) =>
 const processProfile = (profile: WikiTreeProfile) =>
   Effect.gen(function* () {
     yield* saveProfile(profile);
+
+    // Geocode birth and death locations inline (if available and not already geocoded)
+    yield* geocodeLocationIfNeeded(profile.BirthLocation ?? null);
+    yield* geocodeLocationIfNeeded(profile.DeathLocation ?? null);
+
     yield* queueRelatives(profile);
   });
 
