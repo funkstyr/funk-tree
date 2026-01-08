@@ -10,28 +10,33 @@ const RelationshipValue = S.Union(
   S.Array(S.Unknown),
 );
 
+// Helper for optional fields that may be null, undefined, or missing
+// WikiTree API returns sparse data - many fields can be null or missing entirely
+const optionalNullable = <T extends S.Schema.Any>(schema: T) => S.optional(S.NullOr(schema));
+
 // The WikiTree profile as returned by the API
+// All fields are optional and nullable - WikiTree data can be very sparse
 export const WikiTreeProfileSchema = S.Struct({
-  Id: S.optional(S.Number),
-  Name: S.optional(S.String),
-  FirstName: S.optional(S.String),
-  MiddleName: S.optional(S.String),
-  LastNameAtBirth: S.optional(S.String),
-  LastNameCurrent: S.optional(S.String),
-  Suffix: S.optional(S.String),
-  Gender: S.optional(S.String),
-  BirthDate: S.optional(S.String),
-  DeathDate: S.optional(S.String),
-  BirthLocation: S.optional(S.String),
-  DeathLocation: S.optional(S.String),
-  BirthDateDecade: S.optional(S.String),
-  DeathDateDecade: S.optional(S.String),
-  IsLiving: S.optional(S.Number),
-  Father: S.optional(S.Union(S.Number, S.String)),
-  Mother: S.optional(S.Union(S.Number, S.String)),
-  Spouses: S.optional(RelationshipValue),
-  Children: S.optional(RelationshipValue),
-  Parents: S.optional(RelationshipValue),
+  Id: optionalNullable(S.Number),
+  Name: optionalNullable(S.String),
+  FirstName: optionalNullable(S.String),
+  MiddleName: optionalNullable(S.String),
+  LastNameAtBirth: optionalNullable(S.String),
+  LastNameCurrent: optionalNullable(S.String),
+  Suffix: optionalNullable(S.String),
+  Gender: optionalNullable(S.String),
+  BirthDate: optionalNullable(S.String),
+  DeathDate: optionalNullable(S.String),
+  BirthLocation: optionalNullable(S.String),
+  DeathLocation: optionalNullable(S.String),
+  BirthDateDecade: optionalNullable(S.String),
+  DeathDateDecade: optionalNullable(S.String),
+  IsLiving: optionalNullable(S.Number),
+  Father: optionalNullable(S.Union(S.Number, S.String)),
+  Mother: optionalNullable(S.Union(S.Number, S.String)),
+  Spouses: optionalNullable(RelationshipValue),
+  Children: optionalNullable(RelationshipValue),
+  Parents: optionalNullable(RelationshipValue),
 });
 
 export type WikiTreeProfile = S.Schema.Type<typeof WikiTreeProfileSchema>;

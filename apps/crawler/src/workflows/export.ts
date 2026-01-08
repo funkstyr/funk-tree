@@ -1,6 +1,6 @@
 import { Effect } from "effect";
 import { PGlite } from "@electric-sql/pglite";
-import { writeFile, mkdir } from "fs/promises";
+import { writeFile, mkdir, access } from "fs/promises";
 import { dirname } from "path";
 import { Config } from "../services";
 
@@ -27,11 +27,21 @@ export const exportDatabase = (outputPath?: string) =>
   Effect.gen(function* () {
     const config = yield* Config;
 
-    const effectiveOutputPath = outputPath ?? "../../apps/web/public/data/funk-tree.tar.gz";
+    const effectiveOutputPath = outputPath ?? config.paths.exportFile;
 
     yield* Effect.log("Starting database export");
     yield* Effect.log(`Source: ${config.dataDir}`);
     yield* Effect.log(`Output: ${effectiveOutputPath}`);
+
+    // Check if output file already exists
+    const fileExists = yield* Effect.tryPromise({
+      try: () => access(effectiveOutputPath).then(() => true),
+      catch: () => false,
+    });
+
+    if (fileExists) {
+      yield* Effect.logWarning(`Overwriting existing export: ${effectiveOutputPath}`);
+    }
 
     // Open PGLite database directly
     const client = yield* Effect.tryPromise({

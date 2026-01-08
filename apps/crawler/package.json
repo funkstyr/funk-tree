@@ -24,6 +24,7 @@
     "@effect/schema": "^0.75.5",
     "@electric-sql/pglite": "^0.2.17",
     "@funk-tree/db": "workspace:*",
+    "arktype": "^2.1.29",
     "dotenv": "catalog:",
     "drizzle-orm": "^0.45.1",
     "effect": "^3.12.0"

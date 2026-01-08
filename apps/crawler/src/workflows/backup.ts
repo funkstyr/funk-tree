@@ -1,6 +1,6 @@
 import { Effect } from "effect";
 import { PGlite } from "@electric-sql/pglite";
-import { writeFile, readFile, readdir, mkdir, rm } from "fs/promises";
+import { writeFile, readFile, readdir, mkdir, rm, access } from "fs/promises";
 import { dirname, join, basename } from "path";
 import { Config } from "../services";
 
@@ -33,7 +33,6 @@ export interface BackupInfo {
 // Constants
 // ============================================================================
 
-const BACKUP_DIR = "../../apps/web/public/data";
 const BACKUP_PREFIX = "funk-tree-backup-";
 
 // ============================================================================
@@ -62,11 +61,21 @@ export const backupDatabase = (outputPath?: string) =>
     const config = yield* Config;
     const timestamp = getTimestamp();
     const effectiveOutputPath =
-      outputPath ?? join(BACKUP_DIR, `${BACKUP_PREFIX}${timestamp}.tar.gz`);
+      outputPath ?? join(config.paths.backupDir, `${BACKUP_PREFIX}${timestamp}.tar.gz`);
 
     yield* Effect.log("Starting database backup");
     yield* Effect.log(`Source: ${config.dataDir}`);
     yield* Effect.log(`Output: ${effectiveOutputPath}`);
+
+    // Check if output file already exists (unlikely with timestamped names, but possible)
+    const fileExists = yield* Effect.tryPromise({
+      try: () => access(effectiveOutputPath).then(() => true),
+      catch: () => false,
+    });
+
+    if (fileExists) {
+      yield* Effect.logWarning(`Overwriting existing backup: ${effectiveOutputPath}`);
+    }
 
     // Open PGLite database directly
     const client = yield* Effect.tryPromise({
@@ -153,6 +162,16 @@ export const restoreDatabase = (sourcePath?: string) =>
     yield* Effect.log(`Source: ${effectiveSourcePath}`);
     yield* Effect.log(`Target: ${config.dataDir}`);
 
+    // Check if target database already exists
+    const targetExists = yield* Effect.tryPromise({
+      try: () => access(config.dataDir).then(() => true),
+      catch: () => false,
+    });
+
+    if (targetExists) {
+      yield* Effect.logWarning(`Existing database at ${config.dataDir} will be replaced`);
+    }
+
     // Read the backup file
     const tarball = yield* Effect.tryPromise({
       try: () => readFile(effectiveSourcePath),
@@ -164,7 +183,11 @@ export const restoreDatabase = (sourcePath?: string) =>
     // Remove existing database directory if it exists
     yield* Effect.tryPromise({
       try: () => rm(config.dataDir, { recursive: true, force: true }),
-      catch: () => undefined, // Ignore if doesn't exist
+      catch: (error) => {
+        // Expected when directory doesn't exist - force: true should handle most cases
+        console.debug(`[restore] Failed to remove existing directory: ${error}`);
+        return undefined;
+      },
     });
 
     // Create a new PGLite instance from the backup
@@ -231,10 +254,11 @@ const findLatestBackup = Effect.gen(function* () {
 });
 
 export const listBackups = Effect.gen(function* () {
-  yield* Effect.log(`Looking for backups in: ${BACKUP_DIR}`);
+  const config = yield* Config;
+  yield* Effect.log(`Looking for backups in: ${config.paths.backupDir}`);
 
   const files = yield* Effect.tryPromise({
-    try: () => readdir(BACKUP_DIR),
+    try: () => readdir(config.paths.backupDir),
     catch: () => [] as string[], // Return empty if directory doesn't exist
   });
 
@@ -242,7 +266,7 @@ export const listBackups = Effect.gen(function* () {
 
   for (const file of files) {
     if (file.startsWith(BACKUP_PREFIX) && file.endsWith(".tar.gz")) {
-      const filePath = join(BACKUP_DIR, file);
+      const filePath = join(config.paths.backupDir, file);
       const stat = yield* Effect.tryPromise({
         try: async () => {
           const { stat } = await import("fs/promises");

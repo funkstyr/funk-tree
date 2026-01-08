@@ -1,84 +1,12 @@
 import { Effect, Ref } from "effect";
 import { eq, count } from "drizzle-orm";
-import { persons, locations, type NewPerson, type NewLocation } from "@funk-tree/db/schema";
+import { persons, locations, type NewLocation } from "@funk-tree/db/schema";
 import { normalizeLocationKey } from "@funk-tree/db/utils/location";
 import { Config, Database, WikiTreeApi, CrawlQueue, Geocoder } from "../services";
 import type { WikiTreeProfile } from "../domain/profile";
 import { DatabaseQueryError } from "../domain/errors";
 import { exportDatabase } from "./export";
-
-// ============================================================================
-// Utility Functions (Pure)
-// ============================================================================
-
-function buildFullName(profile: WikiTreeProfile): string {
-  const parts: string[] = [];
-  if (profile.FirstName) parts.push(profile.FirstName);
-  if (profile.MiddleName) parts.push(profile.MiddleName);
-  if (profile.LastNameAtBirth) parts.push(profile.LastNameAtBirth);
-  else if (profile.LastNameCurrent) parts.push(profile.LastNameCurrent);
-  if (profile.Suffix) parts.push(profile.Suffix);
-  return parts.length > 0 ? parts.join(" ") : (profile.Name ?? "Unknown");
-}
-
-function extractIds(
-  items: Record<string, unknown> | readonly unknown[] | unknown[] | undefined,
-): string[] {
-  if (!items) return [];
-
-  if (Array.isArray(items)) {
-    return items
-      .map((item) => {
-        if (typeof item === "object" && item !== null) {
-          return (item as Record<string, unknown>).Name as string;
-        }
-        return null;
-      })
-      .filter((id): id is string => id !== null);
-  }
-
-  if (typeof items === "object") {
-    return Object.keys(items as Record<string, unknown>);
-  }
-
-  return [];
-}
-
-function isValidId(id: unknown): boolean {
-  if (!id) return false;
-  if (typeof id === "number" && id === 0) return false;
-  if (typeof id === "string" && (id === "0" || id === "")) return false;
-  return true;
-}
-
-function profileToNewPerson(profile: WikiTreeProfile): NewPerson | null {
-  const wikiId = profile.Name;
-  if (!wikiId) return null;
-
-  const birthLocation = profile.BirthLocation ?? null;
-  const deathLocation = profile.DeathLocation ?? null;
-
-  return {
-    wikiId,
-    wikiNumericId: profile.Id,
-    name: buildFullName(profile),
-    firstName: profile.FirstName ?? null,
-    middleName: profile.MiddleName ?? null,
-    lastNameBirth: profile.LastNameAtBirth ?? null,
-    lastNameCurrent: profile.LastNameCurrent ?? null,
-    suffix: profile.Suffix ?? null,
-    gender: profile.Gender ?? null,
-    birthDate: profile.BirthDate ?? null,
-    deathDate: profile.DeathDate ?? null,
-    birthLocation,
-    birthLocationKey: normalizeLocationKey(birthLocation),
-    deathLocation,
-    deathLocationKey: normalizeLocationKey(deathLocation),
-    isLiving: profile.IsLiving === 1,
-    fatherWikiId: isValidId(profile.Father) ? String(profile.Father) : null,
-    motherWikiId: isValidId(profile.Mother) ? String(profile.Mother) : null,
-  };
-}
+import { extractIds, isValidId, profileToNewPerson } from "../utils";
 
 // ============================================================================
 // Inline Geocoding
@@ -107,7 +35,10 @@ const geocodeLocationIfNeeded = (rawLocation: string | null) =>
           .from(locations)
           .where(eq(locations.rawLocation, rawLocation))
           .limit(1),
-      catch: () => null,
+      catch: (error) => {
+        console.debug(`[geocode] Failed to check existing location: ${error}`);
+        return null;
+      },
     });
 
     if (existing && existing.length > 0) return;
@@ -134,7 +65,15 @@ const geocodeLocationIfNeeded = (rawLocation: string | null) =>
 
     yield* Effect.tryPromise({
       try: () => db.insert(locations).values(newLocation).onConflictDoNothing(),
-      catch: () => null, // Ignore insert errors (e.g., race condition duplicates)
+      catch: (error) => {
+        // Expected during concurrent geocoding - duplicates handled by onConflictDoNothing
+        const isDuplicate = String(error).includes("duplicate") || String(error).includes("UNIQUE");
+        if (!isDuplicate) {
+          // Log unexpected errors at debug level (won't show in normal operation)
+          console.debug(`[geocode] Unexpected insert error: ${error}`);
+        }
+        return null;
+      },
     });
 
     yield* Effect.log(`Geocoded: ${rawLocation} → ${result.state ?? result.country ?? "found"}`);
