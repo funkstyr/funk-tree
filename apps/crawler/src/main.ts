@@ -195,6 +195,7 @@ const main = Effect.gen(function* () {
 const program = main.pipe(
   Effect.provide(AppLayer),
   Logger.withMinimumLogLevel(LogLevel.Info),
+  Effect.provide(Logger.pretty),
   Effect.catchAllCause((cause) =>
     Effect.sync(() => {
       console.error("\nError:");
